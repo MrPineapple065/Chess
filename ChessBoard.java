@@ -15,17 +15,17 @@ import javax.swing.JOptionPane;
  */
 public final class ChessBoard {
 	/**
-	 * A 2D {@code Array} containing all {@link Tile}.
+	 * A 2D array containing all {@link Tile}.
 	 */
 	private final Tile[][] board;
 	
 	/**
-	 * An {@code Array} of {@link Tile} containing the original and new positions of a {@link Piece}.
+	 * An array of {@link Tile} containing the original and new positions of a {@link Piece}.
 	 */
 	private final Tile[] tiles;
 	
 	/**
-	 * An {@code Array} of {@link Player} to play that game.
+	 * An array of {@link Player} to play that game.
 	 */
 	private final Player[] players;
 	
@@ -55,12 +55,12 @@ public final class ChessBoard {
 	private Player nextPlayer;
 	
 	/**
-	 * An int keeping track of the current {@link Player}.
+	 * An {@code int} keeping track of the current {@link Player}.
 	 */
 	private int	currentIndex;
 	
 	/**
-	 * An int keeping track of the next {@link Player}.
+	 * An {@code int} keeping track of the next {@link Player}.
 	 */
 	private int	nextIndex;
 	

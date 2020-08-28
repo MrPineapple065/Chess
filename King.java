@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.util.Objects;
 
 /**
@@ -24,7 +23,7 @@ public class King extends Piece {
 	/**
 	 * Creates a {@code King} that is {@code code}.
 	 * 
-	 * @param color is the {@link Color} of {@code King}.
+	 * @param color is the {@link PieceColor} of {@code King}.
 	 */
 	public King(PieceColor color) {
 		super(color);

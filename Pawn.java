@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -28,7 +27,7 @@ class Pawn extends Piece {
 	/**
 	 * Creates a {@code Pawn} that is {@code color}.
 	 * 
-	 * @param color is the {@link Color} of the {@code Pawn}.
+	 * @param color is the {@link PieceColor} of the {@code Pawn}.
 	 */
 	public Pawn(PieceColor color) {
 		super(color);

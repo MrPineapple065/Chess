@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.util.Objects;
 
 /**
@@ -23,7 +22,7 @@ public class Queen extends Piece {
 	/**
 	 * Creates a {@code Queen} that is {@code color}.
 	 * 
-	 * @param color is the {@link Color} of {@code Queen}.
+	 * @param color is the {@link PieceColor} of {@code Queen}.
 	 */
 	public Queen(PieceColor color) {
 		super(color);

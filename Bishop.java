@@ -1,4 +1,3 @@
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -14,7 +13,7 @@ public class Bishop extends Piece {
 	/**
 	 * Create a {@code Bishop} that is {@code color}.
 	 * 
-	 * @param color is the {@link Color} of {@code Bishop}.
+	 * @param color is the {@link PieceColor} of {@code Bishop}.
 	 */
 	public Bishop(PieceColor color) {
 		super(color);
