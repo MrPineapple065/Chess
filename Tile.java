@@ -4,168 +4,142 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Objects;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
 /**
- * This <code>Tile</code> class represents a Tile
- * on the Chess Board.
+ * This {@code Tile} class represents a Tile
+ * on a Chess Board.
  * 
- * @version 16 March 2020
- * @author MrPineapple070
+ * @version 21 March 2020
+ * @author MrPineapple065
  *
  */
-class Tile extends JButton implements MouseListener, KeyListener {
+public final class Tile extends JButton implements MouseListener, KeyListener {
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = 0x851FA7B9FE81A8EDL;
-	
+
 	/**
-	 * An <code>Array</code> of <code>Color</code> that <code>Tile</code> could be.
+	 * An {@code Array} of {@link Color} that this could be.
 	 */
-	private static final Color[]	tileColors	= new Color[] {new Color(0xc89669), new Color(0x73463c)};
-	
+	private static final Color[] tileColors	= new Color[] {new Color(0xC89669), new Color(0x73463C)};
+
 	/**
-	 * The {@link #ChessBoardPanel} that holds <code>this</code>.
+	 * The {@link ChessBoardPanel} that holds this.
 	 */
-	private final ChessBoardPanel	boardPanel;
-	
+	private final ChessBoardPanel boardPanel;
+
 	/**
-	 * The {@link #Color} of <code>Tile</code>.
+	 * The {@link Color} of this.
 	 */
 	private final Color	tileColor;
-	
+
 	/**
-	 * The column that <code>this</code> is in.
+	 * The column that this is in.
 	 */
-	private final int		column;
-	
+	private final int column;
+
 	/**
-	 * The row that <code>this</code> is in.
+	 * The row that this is in.
 	 */
-	private final int		row;
-	
+	private final int row;
+
 	/**
-	 * The {@link #Piece} on the <code>Tile</code>.</br>
-	 * <code>null</code> if no <code>Piece</code> is on the <code>Tile</code>.
+	 * The {@link Piece} on the {@link Tile}.<br>
+	 * This value is {@code null} if no {@code Piece} is on the {@code Tile}.
 	 */
-	private Piece	piece;
-	
+	private Piece piece;
+
 	/**
-	 * Create <code>Tile</code> with all attributes defined.
+	 * Create {@code Tile} with all attributes defined.
 	 * 
-	 * @param b is the {@link ChessBoardPanel} holding <code>this</code>.
-	 * @param color is the {@link Color} of <code>this</code>.
-	 * @param col is the column that <code>this</code> is in.
-	 * @param row is the row that <code>this</code> is in.
+	 * @param b is the {@link ChessBoardPanel} holding this.
+	 * @param col is the column that this is in.
+	 * @param row is the row that this is in.
 	 * 
-	 * @throws IllegalArgumentException if  <code>b</code> or <code>color</code> are <code>null</code>.
-	 * @throws IndexOutOfBoundsException if <code>Tile</code> trying to be created out of bounds.
+	 * @throws IllegalArgumentException if  {@code b} or {@code color} are {@code null}.
+	 * @throws IndexOutOfBoundsException if {@code Tile} trying to be created out of bounds.
 	 * 
 	 */
-	public Tile(final ChessBoardPanel b, final int col, final int row) throws IllegalArgumentException, IndexOutOfBoundsException {
+	public Tile(ChessBoardPanel b, int col, int row) throws IllegalArgumentException, IndexOutOfBoundsException {
 		super(null, null);
-		
-		if (b == null) {
-			throw new IllegalArgumentException("Missing ChessBoardPanel.");
-		}
-		
-		else {
-			this.boardPanel	= b;
-		}
-		
-		if ((col < 0 || col > 7) || (row < 0 || row > 7)) {
-			throw new IndexOutOfBoundsException("Tile must exist on the board.");
-		}
-		
-		else {
-			this.column	= col;
-			this.row	= row;
-		}
-		
+		this.boardPanel = Objects.requireNonNull(b, "This tile must be on a ChessBoardPanel.");
+		if (col < 0 || col > 7)	throw new IndexOutOfBoundsException("Illegal column: " + col);
+		else					this.column	= col;
+		if (row < 0 || row > 7) throw new IndexOutOfBoundsException("Illegal row: " + row);
+		else					this.row = row;
+
 		this.tileColor = (this.row % 2 == 0 && this.column % 2 == 0) || (this.row % 2 == 1 && this.column % 2 == 1) ? Tile.tileColors[0] : Tile.tileColors[1];
-		
+
 		//Set GUI Elements
 		super.setFont(new Font("", Font.PLAIN, 40));	this.setBackground(this.tileColor);
 		this.setHorizontalAlignment(JButton.CENTER);	this.setVerticalAlignment(JButton.CENTER);
-		this.setFocusPainted(false);
-		
+		this.setFocusPainted(false);					this.setBorder(null);
+
 		//Add Interactivity
 		this.addKeyListener(this);	this.addMouseListener(this);
 		this.setFocusable(true);
 		this.requestFocusInWindow();
 	}
-	
+
 	/**
-	 * Determine the {@link #Piece} on <code>Tile</code>
-	 * 
-	 * @return <code>{@link #piece}</code>
+	 * @return {@link #piece}
 	 */
 	public Piece getPiece() {
 		return this.piece;
 	}
-	
+
 	/**
-	 * Determine the {@link #column} of <code>Tile</code>.
-	 * 
-	 * @return <code>{@link #column}</code>
+	 * @return {@link #column}
 	 */
 	public int getColumn() {
 		return this.column;
 	}
-	
+
 	/**
-	 * Determine the {@link #row} of <code>Tile</code>.
-	 * 
-	 * @return <code>{@link #row}</code>
+	 * @return {@link #row}
 	 */
 	public int getRow() {
 		return this.row;
 	}
-	
+
 	/**
-	 * Determine the {@link #tileColor} of <code>Tile</code>.
-	 * 
 	 * @return {@link #tileColor}
 	 */
 	public Color getTileColor() {
 		return this.tileColor;
 	}
-	
+
 	/**
-	 * Set {@link #piece} to <code>piece</code>.
+	 * Set {@link piece} to {@code piece}.
 	 * 
-	 * @param piece is the new <code>Piece</code>.
+	 * @param piece is the new {@link Piece}.
 	 * 
-	 * @return the new piece
 	 */
-	public Piece setPiece(Piece piece) {
+	public void setPiece(Piece piece) {
 		this.piece = piece;
-		return this.piece;
 	}
-	
+
 	/**
 	 * Update GUI once a move has been completed.
 	 * 
-	 * @return <tt>true</tt> when updated.
+	 * @return {@code true} when updated.
 	 */
 	public boolean update() {
 		if (this.piece != null) {
 			this.setText(this.piece.toString());
-			this.setForeground(this.piece.getPieceColor());
-		}
-		
-		else {
+			this.setForeground(this.piece.getPieceColor().color);
+		} else {
 			this.setText("");
 			this.setForeground(null);
-		}
-		
-		return true;
+		} return true;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -180,187 +154,106 @@ class Tile extends JButton implements MouseListener, KeyListener {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
+		if (this == obj)										return true;
+		if (!(obj instanceof Tile)) 							return false;
 		Tile other = (Tile) obj;
-		if (boardPanel == null) {
-			if (other.boardPanel != null)
-				return false;
-		} else if (!boardPanel.equals(other.boardPanel))
-			return false;
-		if (column != other.column)
-			return false;
-		if (piece == null) {
-			if (other.piece != null)
-				return false;
-		} else if (!piece.equals(other.piece))
-			return false;
-		if (row != other.row)
-			return false;
-		if (tileColor == null) {
-			if (other.tileColor != null)
-				return false;
-		} else if (!tileColor.equals(other.tileColor))
-			return false;
+		if (boardPanel == null) if (other.boardPanel != null)	return false;
+		else if (!boardPanel.equals(other.boardPanel))			return false;
+		if (column != other.column)								return false;
+		if (row != other.row)									return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		String str = "";
-		
-		switch (this.column) {
-		case 0:
-			str += 'a';
-			break;
-		case 1:
-			str += 'b';
-			break;
-		case 2:
-			str += 'c';
-			break;
-		case 3:
-			str += 'd';
-			break;
-		case 4:
-			str += 'e';
-			break;
-		case 5:
-			str += 'f';
-			break;
-		case 6:
-			str += 'g';
-			break;
-		case 7:
-			str += 'h';
-			break;
-		}
-		
-		return str + String.valueOf(8 - this.getRow());
+		return String.valueOf((char)('a' + this.column)) + String.valueOf(8 - this.getRow());
 	}
-	
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		switch (e.getButton()) {
-		
-		/**Left Click*/
 		case MouseEvent.BUTTON1:
 			this.boardPanel.getBoard().movePiece(this);
-			break;
-			
-		/**Middle Click*/
+			return;
 		case MouseEvent.BUTTON2:
 			String tileText = this.getText();
-			if (("".equals(tileText)) || ! ((this.getRow() + ", " + this.getColumn()).equals(tileText))) {
+			String coords = this.getRow() + ", " + this.getColumn();
+			if ("".equals(tileText) || ! coords.equals(tileText)) {
 				this.setForeground(new Color(0x333333));
-				this.setText(this.getRow() + ", " + this.getColumn());
-			}
-			
-			else {
+				this.setText(coords);
+			} else {
 				if (this.getPiece() == null) {
 					this.setText(null);
 					this.setForeground(null);
-				}
-				
-				else {
+				} else {
 					this.setText(this.getPiece().toString());
-					this.setForeground(this.getPiece().getPieceColor());
+					this.setForeground(this.getPiece().getPieceColor().color);
 				}
-			}
-			break;
-		
-		/**Right Click*/
+			} return;
 		case MouseEvent.BUTTON3:
 			String tileText1 = this.getText();
-			if (("".equals(tileText1)) || ! ((this.toString()).equals(tileText1))) {
+			if ("".equals(tileText1) || !this.toString().equals(tileText1)) {
 				this.setForeground(new Color(0x333333));
 				this.setText(this.toString());
-			}
-			
-			else {
+			} else {
 				if (this.getPiece() == null) {
 					this.setText(null);
 					this.setForeground(null);
-				}
-				
-				else {
+				} else {
 					this.setText(this.getPiece().toString());
-					this.setForeground(this.getPiece().getPieceColor());
+					this.setForeground(this.getPiece().getPieceColor().color);
 				}
-			}
-			break;
+			} return;
 		}
 	}
-
+	
 	@Override
-	public void mousePressed(MouseEvent e) {
-		this.getModel().setPressed(true);
-	}
-
+	public void mousePressed(MouseEvent e) {this.getModel().setPressed(true);}
+	
 	@Override
-	public void mouseReleased(MouseEvent e) {
-		this.getModel().setPressed(false);
-	}
-
+	public void mouseReleased(MouseEvent e) {this.getModel().setPressed(false);}
+	
 	@Override
-	public void mouseEntered(MouseEvent e) {
-		this.setBorder(BorderFactory.createLineBorder(new Color(0x4492a6), 3));
-	}
-
+	public void mouseEntered(MouseEvent e) {this.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));}
+	
 	@Override
-	public void mouseExited(MouseEvent e) {
-		this.setBorder(null);		
-	}
-
+	public void mouseExited(MouseEvent e) {this.setBorder(null);}
+	
 	@Override
 	public void keyTyped(KeyEvent e) {
 		switch(e.getKeyChar()) {
-		
 		case KeyEvent.VK_ESCAPE:
 			this.boardPanel.actionPerformed(null);
-			break;
-		
+			return;
 		case 'e':
 			ChessBoard board = this.boardPanel.getBoard();
 			if (board.getTiles()[1] == null) {
 				board.resetTiles();
 				JOptionPane.showMessageDialog(null, "Piece deselected", "", JOptionPane.PLAIN_MESSAGE, null);
-			}
-			break;
-		
+			} return;
+		case 's':
+			this.boardPanel.scoresOption();
+			return;
 		case 'r':
-			switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to reset?", "", JOptionPane.YES_NO_OPTION, JOptionPane.YES_OPTION, null)) {
-			case JOptionPane.YES_OPTION:
-				this.boardPanel.getBoard().reset();
-				break;
-			
-			default:
-				break;
-			}
-			break;
-			
+			this.boardPanel.resetOption();
+			return;
 		case 'q':
-			switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to quit?", "", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null)) {
-			
-			case JOptionPane.YES_OPTION:
-				System.exit(0);
-				break;
-				
-			default:
-				break;
-			}			
+			this.boardPanel.quitOption();
+			return;
+		case 'f':
+			this.boardPanel.resignOption();
+			return;
+		case 'c':
+			this.boardPanel.controlsOption();
+			return;
 		default:
-			break;
+			return;
 		}
 	}
-
+	
 	@Override
-	public void keyPressed(KeyEvent e) {}
-
+	public void keyPressed(KeyEvent e) {return;}
+	
 	@Override
-	public void keyReleased(KeyEvent e) {}
+	public void keyReleased(KeyEvent e) {return;}
 }

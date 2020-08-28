@@ -5,27 +5,23 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 /**
- * The <code>Chess</code> class initiates most
+ * The {@code Chess} class initiates most
  * of the logic for the game of Chess.
  * 
- * @version 16 March 2020
+ * @version 28 August 2020
+ * @since 21 March 2020
  * @author MrPineapple065
- *
  */
 public class Chess {
 	public static void main(String[] args) {
-		Player[]	players	= new Player[2];
-		
+		Player[] players	= new Player[2];
+
 		for (int i = 0; i < players.length; i ++) {
 			String name = JOptionPane.showInputDialog(null, "Player " + (i + 1) + ", enter your name.", "", JOptionPane.PLAIN_MESSAGE);
-			
-			if (name == null) {
-				System.exit(0);
-			}
-			
-			players[i] = new Player(name , Player.playerColors[i]);
+			if (name == null) System.exit(0);
+			players[i] = new Player(name , PieceColor.values()[i]);
 		}
-		
+
 		JFrame frame = new JFrame("Chess");
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.add(new ChessBoardPanel(players));
@@ -37,16 +33,13 @@ public class Chess {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
-		        switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Careful!", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null)) {
-
-		        case JOptionPane.YES_OPTION:
-		            System.exit(0);
-		            break;
-		        
-		        default:
-		        	break;
-		        }
-		    }
+				switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to exit?", "Careful!", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null)) {
+				case JOptionPane.YES_OPTION:
+					System.exit(0);
+				default:
+					return;
+				}
+			}
 		});
 	}
 }

@@ -1,7 +1,9 @@
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -11,110 +13,129 @@ import javax.swing.JTextArea;
 import javax.swing.UIManager;
 
 /**
- * The <code>ChessBoardPanel</code> class represents a
- * the chess board along with its pieces and coordinates. </br>
- * It also allows the user to interact with the board.
+ * <p>The {@code ChessBoardPanel} class represents a
+ * the chess board along with its pieces and coordinates. </p>
+ * <p>It also allows the user to interact with the board.</p>
  * 
- * @version 16 March 2020
+ * @version 21 March 2020
+ * @since 21 March 2020
  * @author MrPineapple065
- *
  */
-public class ChessBoardPanel extends JPanel implements ActionListener {
+public final class ChessBoardPanel extends JPanel implements ActionListener {
 	/**
 	 * serialVersionUID
 	 */
 	private static final long serialVersionUID = 0x966E0D65A8861CA5L;
-
-	/**
-	 * An <code>Array</code> holding all <code>Player</code> in the game.
-	 */
-	private Player[]	players				= new Player[2];
 	
 	/**
-	 * An <code>Array</code> holding all <code>JLabel</code> for all <code>Player</code> in game. </br>
+	 * Standard {@link Font}
+	 */
+	private static final Font standardFont = new Font("", Font.PLAIN, 20);
+	
+	/**
+	 * The actual {@link ChessBoard}.
+	 */
+	private ChessBoard board;
+	
+	/**
+	 * An {@code Array} holding all {@link JLabel} for all {@link Player} in game. <br>
 	 * Used for GUI.
 	 */
-	private JLabel[]	playerLabel			= new JLabel[2];
+	private JLabel[] playerLabel = new JLabel[2];
 	
 	/**
-	 * The actual <code>ChessBoard</code>.
+	 * An {@code Array} holding all {@link Player} in the game.
 	 */
-	private ChessBoard	board;
+	private Player[] players = new Player[2];
 	
 	/**
-	 * Creates a <code>ChessBoardPanel</code> with <code>Player[] p</code>
-	 * @throws	IllegalArgumentException if <code>p</code> contains
-	 * 			more than two instances of <code>Player</code>.
-	 * @param p the <code>Players</code> playing
+	 * Creates a {@code ChessBoardPanel} with {@code p}.
+	 * 
+	 * @param p is the {@code Array} of {@code Player} playing.
+	 * 
+	 * @throws IllegalArgumentException if {@code p} contains more than <b>two</b> instances of {@link Player}.
 	 */
 	public ChessBoardPanel(Player[] p) throws IllegalArgumentException {
-		/**Set default GUI Elements*/
 		super();
-		setLayout(new GridLayout(10, 9));
-		
-		UIManager.put("OptionPane.messageFont",	new Font("", Font.PLAIN, 30));
-		UIManager.put("OptionPane.buttonFont",	new Font("", Font.PLAIN, 20));
-		UIManager.put("Button.font",			new Font("Arial", Font.PLAIN, 20));
-		UIManager.put("Label.font",				new Font("", Font.PLAIN, 30));
-		
-		/**Set other attributes*/
-		
-		if (p.length > 2) {
-			throw new IllegalArgumentException("The number of Players exceedes the expected range");
-		}
-		
-		else {
-			this.players = p;
-		}
-		
+		if (p.length != 2) throw new IllegalArgumentException("The number of Players exceedes the expected range");
+		this.players = p;
 		this.board = new ChessBoard(this, this.players);
 		
-		/**Creates other GUI elements*/
+		//Set Default GUI Elements
+		setLayout(new GridLayout(10, 9));
+		
+		UIManager.put("OptionPane.messageFont",	standardFont);
+		UIManager.put("OptionPane.buttonFont",	standardFont);
+		UIManager.put("Button.font",			new Font("Arial", Font.PLAIN, 18));
+		UIManager.put("Label.font",				standardFont);
+		UIManager.put("Label.background", 		null);
+		UIManager.put("Label.foreground",		Color.BLACK);
+		
+		//Creates other GUI elements
 		this.createLabels();
 		this.createTiles();
 	}
 	
 	
-	/**
-	 * @return <code>{@link #board}</code>.
-	 */
-	public ChessBoard getBoard() {
-		return this.board;
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		//Determine which option is chosen.
+		switch (JOptionPane.showOptionDialog(null, "Pick an option", "Menu", JOptionPane.DEFAULT_OPTION , JOptionPane.PLAIN_MESSAGE, null, new String[] {"Scores", "Reset", "Quit", "Resign", "Controls"}, 0)) {
+		case 0:
+			this.scoresOption();
+			return;
+		case 1:
+			this.resetOption();
+			return;
+		case 2:
+			this.quitOption();
+			return;
+		case 3:
+			this.resignOption();
+			return;
+		case 4:
+			this.controlsOption();
+			return;
+		default:
+			return;
+		}
 	}
 	
 	/**
-	 * Create <code>JLabel</code> to add to the <code>ChessBoardPanel</code>.
+	 * Display the controls of the game.
+	 */
+	public void controlsOption() {
+		JTextArea jta = new JTextArea("Escape:\tPause\ne:\tdeselect piece\ns:\tScores\nr:\tReset\nq:\tQuit\nf:\tResign\nc:\tControls");
+		jta.setOpaque(false); jta.setEditable(false);
+		jta.setFont(new Font("Arial", Font.PLAIN, 20));
+		JOptionPane.showMessageDialog(null, jta, "Controls", JOptionPane.PLAIN_MESSAGE, null);
+	}
+	
+	/**
+	 * Create {@link JLabel} to add to the {@link ChessBoardPanel}.
 	 */
 	private void createLabels() {
 		this.playerLabel[0] = new JLabel(this.players[0].getName(), JLabel.CENTER);
-		this.playerLabel[0].setForeground(this.players[0].getPlayerColor());
 		this.playerLabel[1] = new JLabel(this.players[1].getName(), JLabel.CENTER);
-		this.playerLabel[1].setForeground(this.players[1].getPlayerColor());
 		
-		/**
-		 * add empty space
-		 */
+		//Empty Space
 		for (int i = 0; i < 3; i ++) {
 			add(new JLabel(""));
 		}
 		
-		/**
-		 * Display all <code>Player</code>
-		 */
+		//Display all {@link Player}
 		add(playerLabel[0]);
 		add(new JLabel("vs", JLabel.CENTER));
 		add(playerLabel[1]);
 		
-		/**
-		 * add empty space
-		 */
+		//Empty space
 		for (int i = 0; i < 3; i ++) {
 			add(new JLabel("", JLabel.CENTER));
 		}
 	}
 	
 	/**
-	 *  Create <code>Tile</code> to add to <code>ChessBoardPanel</code>.
+	 *  Adds {@link Tile} to this.
 	 */
 	private void createTiles() {
 		char[]	columnDictation	= new char[]{'a','b','c','d','e','f','g','h'};
@@ -140,74 +161,85 @@ public class ChessBoardPanel extends JPanel implements ActionListener {
 	}
 	
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		/**Determine which option is chosen.*/
-		switch (JOptionPane.showOptionDialog(null, "Pick an option", "Menu", JOptionPane.DEFAULT_OPTION , JOptionPane.PLAIN_MESSAGE, null, new String[] {"Scores", "Reset", "Quit", "Resign", "Controls"}, 0)) {
-		
-		/**Display the scores of each <code>Player</code>.*/
-		case 0:
-			JOptionPane.showMessageDialog(null, this.players[0].getName() + ": " + this.players[0].getScore() + "\n" +
-			this.players[1].getName() + ": " + this.players[1].getScore(),
-			"Scores", JOptionPane.PLAIN_MESSAGE, null);
-			break;
-		
-		/**Reset the <code>Board</code>.*/
-		case 1:
-			switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to reset?", "", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null)) {
-			
-			case JOptionPane.YES_OPTION:
-				this.board.reset();
-				JOptionPane.showMessageDialog(null, "Board has been Reset", "", JOptionPane.PLAIN_MESSAGE, null);
-				break;
-				
-			default:
-				break;
-			}
-			break;
-			
-		case 2:
-			switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to quit?", "", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null)) {
-			
-			case JOptionPane.YES_OPTION:
-				System.exit(0);
-				break;
-				
-			default:
-				break;
-			}
-			break;
-			
-		/**<code>Player</code> forfeits the match.*/
-		case 3:
-			if (!this.board.getGameOver()) {
-				switch(JOptionPane.showConfirmDialog(null, this.players[this.board.getCurrentPlayer()].getName() + ", are you sure you want to resign?", "", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null)) {
-				
-				case JOptionPane.YES_OPTION: 
-					this.board.setGameOver(true);
-					JOptionPane.showMessageDialog(null, this.players[this.board.getNextPlayer()].getName() + " wins!");
-					break;
-				
-				default:
-					break;
-				}
-			}
-			
-			else {
-				this.board.removeTileListeners();
-				JOptionPane.showMessageDialog(null, "The Game is Over!", "Game Over!", JOptionPane.PLAIN_MESSAGE, null);
-			}
-			break;
-		
-		/**Display the controles of the game*/
-		case 4:
-			JTextArea jta = new JTextArea("Escape:\tPause\ne:\tdeselect piece\nr:\tReset\nq:\tQuit");
-			jta.setOpaque(false); jta.setEditable(false);
-			jta.setFont(new Font("Arial", Font.PLAIN, 20));
-			JOptionPane.showMessageDialog(null, jta, "Controls", JOptionPane.PLAIN_MESSAGE, null);
-			break;
-		
+	public boolean equals(Object obj) {
+		if (this == obj)									return true;
+		if (!(obj instanceof ChessBoardPanel))				return false;
+		ChessBoardPanel other = (ChessBoardPanel)obj;
+		if (board == null) if (other.board != null)			return false;
+		else if (!board.equals(other.board))				return false;
+		if (!Arrays.equals(playerLabel, other.playerLabel))	return false;
+		if (!Arrays.equals(players, other.players))			return false;
+		return true;
+	}
+	
+	/**
+	 * @return {@link #board}
+	 */
+	public ChessBoard getBoard() {
+		return this.board;
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((board == null) ? 0 : board.hashCode());
+		result = prime * result + Arrays.hashCode(playerLabel);
+		result = prime * result + Arrays.hashCode(players);
+		return result;
+	}
+	
+	/**
+	 * Quit the game.
+	 */
+	public void quitOption() {
+		switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to quit?", "", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null)) {
+		case JOptionPane.YES_OPTION:
+			System.exit(0);
 		default:
-			break;
+			return;
 		}
+	}
+	
+	/**
+	 * Reset {@link #board}.
+	 */
+	public void resetOption() {
+		switch (JOptionPane.showConfirmDialog(null, "Are you sure you want to reset?", "", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null)) {
+		case JOptionPane.YES_OPTION:
+			this.board.reset();
+			JOptionPane.showMessageDialog(null, "Board has been Reset", "", JOptionPane.PLAIN_MESSAGE, null);
+		default:
+			return;
+		}
+	}
+	
+	/**
+	 * A {@link Player} has resigned.
+	 */
+	public void resignOption() {
+		if (!this.board.getGameOver())
+			switch(JOptionPane.showConfirmDialog(null, this.board.getCurrentPlayer().getName() + ", are you sure you want to resign?", "", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null)) {
+			case JOptionPane.YES_OPTION: 
+				this.board.setGameOver(true);
+				JOptionPane.showMessageDialog(null, this.board.getNextPlayer().getName() + " wins!");
+			default:
+				return;
+			}
+		JOptionPane.showMessageDialog(null, "The Game is Over!", "Game Over!", JOptionPane.PLAIN_MESSAGE, null);
+	}
+	
+	/**
+	 * Display the current scores of the {@link Player}
+	 */
+	public void scoresOption() {
+		JOptionPane.showMessageDialog(null, String.format("%s%n%s", this.players[0].toString(), this.players[1].toString()), "Scores", JOptionPane.PLAIN_MESSAGE, null);
+	}
+
+
+	@Override
+	public String toString() {
+		return "ChessBoardPanel [players=" + Arrays.toString(players) + ", playerLabel=" + Arrays.toString(playerLabel)
+				+ ", board=" + board + "]";
 	}
 }

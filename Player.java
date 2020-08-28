@@ -1,56 +1,44 @@
-import java.awt.Color;
+import java.util.Objects;
 
 /**
- * This <code>Player</code> class represents a
+ * This {@code Player} class represents a
  * player in the game of Chess.
  * 
- * @version 16 March 2020
+ * @version 21 March 2020
+ * @since 21 March 2020
  * @author MrPineapple065
  */
 class Player {
-	public static final Color[] playerColors	= new Color[] {Piece.WHITE, Piece.BLACK};
+	/**
+	 * An {@code array} of {@link Piece} that {@code Player} has.
+	 */
+	private final Piece[] pieces;
 	
 	/**
-	 * An <code>Array</code> of <code>Piece</code> that <code>Player</code> has.
+	 * The {@link PieceColor} of this.
 	 */
-	private Piece[]	pieces;
+	private final PieceColor playerColor;
 	
 	/**
-	 * The <code>Color</code> of <code>Player</code>.
+	 * The name of the this.
 	 */
-	private Color	playerColor;
+	private final String name;
 	
 	/**
-	 * The name of the <code>Player</code>.
+	 * The score of the this.
 	 */
-	private String	name;
+	private int	 score;
 	
 	/**
-	 * The score of the <code>Player</code>.
+	 * Creates a {@code Player} with specified name and player piece color
+	 * 
+	 * @param n		is the player's name.
+	 * @param color	is the player's piece color.
 	 */
-	private int		score;
-	
-	/**
-	 * Creates a player with specified name and player piece color
-	 * @param n		the player's name
-	 * @param color	the player's piece color
-	 */
-	public Player(String n, Color color) throws IllegalArgumentException {
+	public Player(String n, PieceColor color) {
 		this.pieces	= new Piece[16];
-		this.name	= n;
-		
-		if (color == null) {
-			throw new IllegalArgumentException("Player must have a color");
-		}
-		
-		else if (! color.equals(Piece.WHITE) && ! color.equals(Piece.BLACK)) {
-			throw new IllegalArgumentException("Color is not " + Piece.WHITE.toString() + " or " + Piece.BLACK.toString() + ".");
-		}
-		
-		else {
-			this.playerColor	= color;
-		}
-		
+		this.name	= Objects.requireNonNull(n, "Player's name must be non null");
+		this.playerColor = Objects.requireNonNull(color, "Player must have PieceColor.");
 		this.score	= 0;
 		this.setPieces();
 	}
@@ -72,7 +60,7 @@ class Player {
 	/**
 	 * @return {@link #playerColor}
 	 */
-	public Color getPlayerColor() {
+	public PieceColor getPlayerColor() {
 		return this.playerColor;
 	}
 	
@@ -84,7 +72,7 @@ class Player {
 	}
 	
 	/**
-	 * Set the <code>Player score</code> to <code>newScore</code>.
+	 * Set {@link #score} to {@code newScore}.
 	 * 
 	 * @param newScore is the new score.
 	 */
@@ -93,7 +81,7 @@ class Player {
 	}
 	
 	/**
-	 * Increment the <code>Player score</code> by <code>increment</code>.
+	 * Increment {@link #score} by {@code increment}.
 	 * 
 	 * @param increment is the increment.
 	 */
@@ -102,9 +90,9 @@ class Player {
 	}
 	
 	/**
-	 * Add all <code>Piece</code> to <code>Player</code>.
+	 * Add all {@link Piece} to {@link pieces}.
 	 * 
-	 * @throws IllegalArgumentException if <code>playerColor</code> is <code>null</code>.
+	 * @throws IllegalArgumentException if construction of {@link Piece} fails.
 	 */
 	private void setPieces() throws IllegalArgumentException {
 		//Add Pawns
@@ -123,11 +111,8 @@ class Player {
 		this.pieces[15]	= new Rook	(this.playerColor);
 	}
 	
-	/**
-	 * @return <code>String</code> representation of <code>Player</code>.
-	 */
 	@Override
 	public String toString() {
-		return this.name + ":\t" + this.score;
+		return String.format("%-10s:%d", this.name, this.score);
 	}
 }

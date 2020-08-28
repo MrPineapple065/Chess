@@ -1,315 +1,256 @@
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import javax.swing.JOptionPane;
 
 /**
- * This <code>Pawn</code> represents a
- * Pawn in the game of Chess.
+ * This {@code Pawn} represents a Pawn in the game of Chess. <br>
+ * This is a subclass of {@link Piece}
  * 
- * @version 16 March 2020
+ * @version 28 August 2020
+ * @since 21 March 2020
  * @author MrPineapple065
- *
  */
 class Pawn extends Piece {
 	/**
-	 * The amount of points <code>Pawn</code> is worth
+	 * A boolean determnining is the {@code Pawn} taken advantage of its first move.
+	 * Used in {@link #getLegal(Tile[][], Tile[])}.
 	 */
-	private static final int VALUE = 0x01;
+	private boolean advantage;
 	
 	/**
-	 * A boolean determining if the <code>Pawn</code> has moved.
-	 * 
-	 * @see #getLegal(Pawn, Tile[][], Tile[]);
+	 * A boolean determining if the {@code Pawn} has moved.
+	 * Used in {@link #getLegal(Tile[][], Tile[])}
 	 */
 	private boolean	hasMoved;
 	
 	/**
-	 * Creates a <code>Pawn</code> that is <code>color</code>.
+	 * Creates a {@code Pawn} that is {@code color}.
 	 * 
-	 * @param color is the color of the <code>Pawn</code>.
-	 * 
-	 * @throws IllegalArgumentException if <code>color</code> is <code>null</code>.
+	 * @param color is the {@link Color} of the {@code Pawn}.
 	 */
-	public Pawn(Color color) throws IllegalArgumentException {
+	public Pawn(PieceColor color) {
 		super(color);
 		this.hasMoved = false;
+		this.advantage = false;
 	}
 	
 	/**
-	 * Determine the value of <code>Pawn</code>.
+	 * Determine if {@code Pawn} has taken advantage of first move. <br>
+	 * Used in {@link #getLegal(Tile[][], Tile[])}
 	 * 
-	 * @return {@link #VALUE}
+	 * @return {@link #advantage}
 	 */
-	public static int getValue() {
-		return VALUE;
+	public boolean advantage() {
+		return this.advantage;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)					return true;
+		if (!(obj instanceof Pawn))			return false;
+		Pawn other = (Pawn) obj;
+		if (advantage != other.advantage)	return false;
+		if (hasMoved != other.hasMoved)		return false;
+		return true;
 	}
 	
 	/**
-	 * Determine if move <code>Pawn</code> makes from <code>tiles[0]</code> to <code>tiles[1]</code> is legal. </br>
-	 * A <code>Pawn</code> can <b>only</b> move <b>forward</b> <i>one</i> <code>Tile</code> at a time. </br>
-	 * Only the first move may <code>Pawn</code> move <i>two</i> <code>Tile<code> forward. </br>
-	 * It also can <b>only</b> capture <b>diagonally</b>.
-	 * 
-	 * @param pawn is the pawn moving.
-	 * @param board is the board.
-	 * @param tiles are the original and new positions of <code>Pawn</code>.
-	 * 
-	 * @return  <code>true</code> if move is legal. </br>
-	 * 			<code>false</code> if move is illegal.
-	 * 
-	 * @throws IllegalArgumentException if any <code>paremeter</code> is <code>null</code>.
+	 * <p>Determine if move {@code Pawn} makes from {@code tiles[0]} to {@code tiles[1]} is legal.</p>
+	 * <p>A {@code Pawn} can must move <b>forward</b> <i>one</i> {@link Tile} at a time.<br>
+	 * Only the first move may {@code Pawn} move <i>two</i> {@code Tile} forward.</p>
+	 * <p>It must capture <b>diagonally</b>.<br>
+	 * En passant is a special pawn capture that can only occur <b>immediately</b> 
+	 * after {@code Pawn} makes a move of <i>two</i> {@code Tile} from its starting square.<br>
+	 * It can be captured by an <b><i>enemy</i></b> {@code Pawn} had it advanced <b><i>only one</i></b> {@code Tile}</p>
 	 */
-	public static boolean getLegal(Pawn pawn, Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
-		try {
-			Pawn.iae(pawn, board, tiles);
-		}
-		
-		catch (IllegalArgumentException iae) {
-			throw iae;
-		}
+	@Override
+	public boolean getLegal(Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
+		Objects.requireNonNull(board, "Pawn must be on a board");
+		Objects.requireNonNull(tiles, "Pawn must move");
+		if (tiles.length != 2) throw new IllegalArgumentException("Illegal number of elements in tiles.");
 		
 		int oldX = tiles[0].getRow(), oldY = tiles[0].getColumn(), newX = tiles[1].getRow(), newY = tiles[1].getColumn();
-		
-		//White
-		if (pawn.getPieceColor().equals(Piece.WHITE)) {
-			//First move can move two forward
-			if (! pawn.hasMoved()) {
+		Piece newPosPiece = board[newX][newY].getPiece();
+		if (this.isWhite()) {
+			if (!this.hasMoved) {
 				if ((oldX - newX <= 2) && (oldY == newY)) {
-					if (board[newX][newY].getPiece() != null) {
-						return false;
-					}
-					
-					pawn.setFirstMove(false);
+					if (newPosPiece != null) return false;
+					this.hasMoved = true;
+					this.advantage = oldX - newX == 2;
 					return true;
-				}
-				pawn.setFirstMove(true);
-				
-				//Capturing
-				if ((oldX - newX == 1) && (oldY - newY == 1)) {
-					if (board[newX][newY].getPiece() != null) {
-						pawn.setFirstMove(false);
+				} if ((oldX - newX == 1) && (Math.abs(oldY - newY) == 1)) {
+					if (newPosPiece != null) {
+						this.hasMoved = true;
+						this.advantage = false;
 						return true;
 					}
 				}
-				
-				else if ((oldX - newX == 1) && (oldY - newY == -1)) {
-					if (board[newX][newY].getPiece() != null) {
-						pawn.setFirstMove(false);
-						return true;
+			} else {
+				if ((oldX - newX == 1) && (newY == oldY)) {
+					this.advantage = false;
+					return (newPosPiece == null);
+				} if ((oldX - newX == 1) && (Math.abs(oldY - newY) == 1)) {
+					if (newPosPiece != null) return true;
+					Piece behind = board[newX][oldY].getPiece();
+					if (behind instanceof Pawn) {
+						if (((Pawn)behind).advantage()) {
+							board[newX][oldY].setPiece(null);
+							return true;
+						}
 					}
 				}
 			}
-			
-			else {
-				//moving
-				if ((oldX - newY == 1) && (newY == oldY)) {
-					return (board[newX][newY].getPiece() == null);
-				}
-				
-				//Capturing
-				if ((oldX - newX == 1) && (Math.abs(oldY - newY) == 1)) {
-					return (board[newX][newY].getPiece() != null);
-				}
-			}
-		}
-		
-		//Black
-		else {
-			//First move can move two forward
-			if (! pawn.hasMoved()) {
-				//Moving
-				if ((oldX - newX >= -2) && (oldY == newY)) {
-					if (board[newX][newY].getPiece() != null) {
-						return false;
-					}
-					pawn.setFirstMove(false);
+		} else {
+			if (!this.hasMoved) {
+				if (oldX - newX >= -2 && oldY == newY) {
+					if (newPosPiece != null) return false;
+					this.hasMoved = true;
+					this.advantage = oldX - newX == -2;
 					return true;
-				}
-				
-				//Capturing
-				if ((oldX - newX == -1) && (Math.abs(oldY - newY) == 1)) {
-					if (board[newX][newY].getPiece() != null) {
-						pawn.setFirstMove(false);
+				} if (oldX - newX == -1 && Math.abs(oldY - newY) == 1) {
+					if (newPosPiece != null) {
+						this.hasMoved = true;
+						this.advantage = false;
 						return true;
 					}
 				}
-			}
-				
-			else {
-				//Moving
-				if ((oldX - newX == -1) && (newY == oldY)) {
-					return (board[newX][newY].getPiece() == null);
+			} else {
+				if (oldX - newX == -1 && newY == oldY) {
+					this.setAdvantage(false);
+					return (newPosPiece == null);
+				} if (oldX - newX == -1 && Math.abs(oldY - newY) == 1) {
+					if (newPosPiece != null) return true;
+					else {
+						Piece behind = board[newX][oldY].getPiece();
+						if (behind instanceof Pawn) {
+							if (((Pawn)behind).advantage()) {
+								board[newX][oldY].setPiece(null);
+								return true;
+							}
+						}
+					}
 				}
-				
-				//Capturing
-				if ((oldX - newY == -1) && (Math.abs(oldY - newX) == 1)) {
-					return (board[newX][newY].getPiece() != null);
-				}
 			}
-		}
-		
-		return false;
+		} return false;
 	}
 
-	/**
-	 * Determine all <code>Tile</code> from <code>tiles[0]</code> to
-	 * <code>tiles[1]</code> that a <code>Pawn</code> travels over in its journey.
-	 * 
-	 * @param piece is the piece moving
-	 * @param board is the board
-	 * @param tiles are the original and new positions of <code>Piece</code>.
-	 * 
-	 * @return	an <code>Array</code> of <code>Tile</code> from <code>tiles[0]</code> to
-	 * 			<code>tiles[1]</code> that a <code>Pawn</code> travels over in its journey.
-	 * 
-	 * @throws IllegalArgumentException if any <code>parameter</code> is <code>null</code>.
-	 */
-	public static Tile[] setTilesCollide(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
-		try {
-			Pawn.iae(piece, board, tiles);
-		}
+	@Override
+	public int getValue() {
+		return 1;
+	}
 
-		catch (IllegalArgumentException iae) {
-			throw iae;
-		}
-		
-		ArrayList<Tile> temp = new ArrayList<Tile>(2);
-		int oldX = tiles[0].getRow(), oldY = tiles[0].getColumn(), newX = tiles[1].getRow(), newY = tiles[1].getColumn();
-		
-		//White
-		if (piece.getPieceColor().equals(Piece.WHITE)) {
-			if (oldY != newY) {
-				temp.add(board[oldX][oldY]);
-				temp.add(board[newX][newY]);
-			}
-			
-			else {
-				for (int i = oldX; i >= newX; i--) {
-					temp.add(board[i][newY]);
-				}
-			}
-		}
-		
-		//Black
-		else {
-			if (oldY != newY) {
-				temp.add(board[oldX][oldY]);
-				temp.add(board[newX][newY]);
-			}
-			
-			else {
-				for (int i = oldX; i <= newX; i++) {
-					temp.add(board[i][newY]);
-				}
-			}
-		}
-		
-		//Cannot collide with self
-		if (temp.get(0).equals(board[oldX][oldY])) {
-			temp.remove(0);
-		}
-		
-		//Cannot collide when capturing
-		if (temp.get(temp.size() - 1).getPiece() != null) {
-			if (! piece.isAlly(temp.get(temp.size() - 1).getPiece())) {
-				temp.remove(temp.size() - 1);
-			}
-		}
-		
-		Tile[] t = new Tile[temp.size()];
-		for (int k = 0; k < t.length; k++) {
-			t[k] = temp.get(k);
-		}
-		return t;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (advantage ? 1231 : 1237);
+		result = prime * result + (hasMoved ? 1231 : 1237);
+		return result;
 	}
 	
 	/**
-	 * Determine if any of its <code>parameters</code> are <code>null</code>.
+	 * Determine if {@code Pawn} has moved.
 	 * 
-	 * @param piece is the piece
-	 * @param board is the board
-	 * @param tiles are the original and new positions of <code>Piece</code>.
-	 * 
-	 * @throws IllegalArgumentException if any <code>parameters</code> are <code>null</code>.
+	 * @return {@link #hasMoved}
 	 */
-	private static void iae(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
-		if (piece == null) {
-			throw new IllegalArgumentException("There must be a Pawn.");
-		}
-		
-		if (! (piece instanceof Pawn)) {
-			throw new IllegalArgumentException("Piece must be a Pawn.");
-		}
-		
-		if (board == null) {
-			throw new IllegalArgumentException("There must be a board.");
-		}
-		
-		if (tiles == null) {
-			throw new IllegalArgumentException("Pawn must move.");
-		}
-	}
-	
-	/**
-	 * Determine if <code>Pawn<code> has moved.
-	 * 
-	 * @return hasMoved
-	 */
-	private boolean hasMoved() {
+	public boolean hasMoved() {
 		return this.hasMoved;
 	}
 	
+	@Override
+	public void reset() {
+		this.hasMoved = false;
+		this.advantage = false;
+	}
+	
 	/**
-	 * Change the value of <code>hasMoved</code> to <code>bool</code>.
+	 * Promote a {@code Pawn} that has made it to the other side of {@code board}.
+	 * 
+	 * @param tiles are the original and new positions of {@code Pawn}.
+	 */
+	public void promote(Tile[] tiles) {
+		Queen	queen	= new Queen	(this.pieceColor);
+		Bishop	bishop	= new Bishop(this.pieceColor);
+		Rook	rook	= new Rook	(this.pieceColor);
+		Knight	knight	= new Knight(this.pieceColor);
+		
+		switch (JOptionPane.showOptionDialog(null, "Which piece would you like to promote the pawn to?", "Promotion!", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[] {queen.toString(), bishop.toString(), rook.toString(), knight.toString()}, 0)) {
+		case 0:
+			tiles[1].setPiece(queen);
+			return;
+		case 1:
+			tiles[1].setPiece(bishop);
+			return;
+		case 2:
+			tiles[1].setPiece(rook);
+			return;
+		case 3:
+			tiles[1].setPiece(knight);
+			return;
+		}
+	}
+
+	/**
+	 * Change {@link #advantage} to {@code bool}.
+	 * @param bool is the new value.
+	 */
+	public void setAdvantage(boolean bool) {
+		this.advantage = bool;
+	}
+
+	/**
+	 * Change {@link #hasMoved} to {@code bool}.
 	 * 
 	 * @param bool is the new value.
 	 */
 	public void setFirstMove(boolean bool) {
 		this.hasMoved = bool;
 	}
-	
-	/**
-	 * Promote a <code>Pawn</code> that has made it to the other side of <code>board</code>.
-	 * 
-	 * @param tiles are the original and new positions of <code>Pawn</code>.
-	 * 
-	 * @throws IllegalArgumentException is {@link #getPieceColor()} return <code>null</code>.
-	 */
-	public void promote(Tile[] tiles) throws IllegalArgumentException {
-		switch (JOptionPane.showOptionDialog(null, "Which piece would you like to promote the pawn to?", "Promotion!", JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[] {"\u2655", "\u2656", "\u2657", "\u2658"}, "\u2655")) {
+
+	@Override
+	public Tile[] setTileCollide(Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
+		Objects.requireNonNull(board, "Pawn must be on a board");
+		Objects.requireNonNull(tiles, "Pawn must move");
+		if (tiles.length != 2) throw new IllegalArgumentException("Illegal number of elements in tiles.");
 		
-		case 0:
-			Queen queen = new Queen(this.getPieceColor());
-			tiles[0].setPiece(queen);
-			break;
-			
-		case 1:
-			Bishop bishop = new Bishop(this.getPieceColor());
-			tiles[0].setPiece(bishop);
-			break;
-			
-		case 2:
-			Rook rook = new Rook(this.getPieceColor());
-			tiles[0].setPiece(rook);
-			break;
-			
-		case 3:
-			Knight knight = new Knight(this.getPieceColor());
-			tiles[0].setPiece(knight);
-			break;
-		}
+		ArrayList<Tile> temp = new ArrayList<Tile>(2);
+		int oldX = tiles[0].getRow(), oldY = tiles[0].getColumn(), newX = tiles[1].getRow(), newY = tiles[1].getColumn();
+		
+		if (this.isWhite())
+			if (oldY != newY) {
+				temp.add(board[oldX][oldY]);
+				temp.add(board[newX][newY]);
+			} else for (int i = oldX; i >= newX; i--) {
+				temp.add(board[i][newY]);
+			}
+		else
+			if (oldY != newY) {
+				temp.add(board[oldX][oldY]);
+				temp.add(board[newX][newY]);
+			} else for (int i = oldX; i <= newX; i++) {
+				temp.add(board[i][newY]);
+			}
+		
+		//Cannot collide with self
+		temp.remove(board[oldX][oldY]);
+		
+		//Cannot collide when capturing
+		if (!this.isAlly(temp.get(temp.size() - 1).getPiece())) temp.remove(temp.size() - 1);
+		
+		return temp.toArray(new Tile[temp.size()]);
 	}
-	
-	/**
-	 * @return <code>String</code> representation of <code>Pawn</code>
-	 */
+
 	@Override
 	public String toString() {
-		if (super.getPieceColor().equals(Piece.WHITE)) {
+		switch (this.pieceColor) {
+		case White:
 			return "\u2659";
+		case Black:
+			return "\u265F";
+		default:
+			return default_name;
 		}
-		
-		return "\u265F";
 	}
 }

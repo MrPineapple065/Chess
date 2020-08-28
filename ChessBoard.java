@@ -1,37 +1,38 @@
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 import javax.swing.JOptionPane;
 
 /**
- * This </code>ChessBoard</code> class represents a chess board.
- * It includes all the <code>Tile</code> on the board
- * as well as all <code>Piece</code> on the board.
+ * This {@code ChessBoard} class represents a chess board. <br>
+ * It includes all the {@link Tile} on the board as well as all {@link Piece} on the board.
  * 
- * @version 16 March 2020
+ * @version 28 August 2020
+ * @since 21 March 2020
  * @author MrPineapple065
  */
-class ChessBoard {
+public final class ChessBoard {
 	/**
-	 * A 2D {@link Arrays} containing all {@link Tile}.
+	 * A 2D {@code Array} containing all {@link Tile}.
 	 */
-	private Tile[][]		board;
+	private final Tile[][] board;
 	
 	/**
-	 * An {@link Arrays} of {@link Tile} containing the original and new positions of a {@link Piece}.
+	 * An {@code Array} of {@link Tile} containing the original and new positions of a {@link Piece}.
 	 */
-	private Tile[]			tiles;
+	private final Tile[] tiles;
 	
 	/**
-	 * An {@link Arrays} of {@link Player} to play that game.
+	 * An {@code Array} of {@link Player} to play that game.
 	 */
-	private Player[]		players;
+	private final Player[] players;
 	
 	/**
-	 * The {@link ChessBoardPanel} holding <code>this</code>.
+	 * The {@link ChessBoardPanel} holding this.
 	 */
-	private ChessBoardPanel boardPanel;
+	private final ChessBoardPanel boardPanel;
 	
 	/**
 	 * The {@link Piece} attacking {@link King}
@@ -39,61 +40,140 @@ class ChessBoard {
 	private Piece attackPiece;
 	
 	/**
-	 * A <code>boolean</code> used to determine if the game is over.
+	 * A {@code boolean} used to determine if the game is over.
 	 */
-	private boolean			gameOver;
+	private boolean	gameOver;
 	
 	/**
-	 * An <code>int</code> keeping track of the current <code>Player</code>.
+	 * A reference to the current {@link Player}.
 	 */
-	private int				currentPlayer;
+	private Player currentPlayer;
 	
 	/**
-	 * An <code>int</code> keeping track of the next <code>Player</code>.
+	 * A reference to the next {@link Player}.
 	 */
-	private int				nextPlayer;
+	private Player nextPlayer;
 	
 	/**
-	 * Creates a <code>ChessBoard</code> with <code>Player[] p</code>
-	 * and <code>ChessBoardPanel cb</code>.
+	 * An int keeping track of the current {@link Player}.
+	 */
+	private int	currentIndex;
+	
+	/**
+	 * An int keeping track of the next {@link Player}.
+	 */
+	private int	nextIndex;
+	
+	/**
+	 * Creates a {@code ChessBoard} with {@code players} and {@code bp}.
 	 * 
-	 * @throws IllegalArgumentException if the <code>length</code> of
-	 * <code>players</code> is greater than 2 or 
-	 * if <code>bp</code> is <code>null</code>.
+	 * @param bp is the {@link ChessBoardPanel} holding this.
+	 * @param players is an {@code Array} containing all {@link Player}.
 	 * 
-	 * @param bp is the <code>JPanel</code> holding <code>this</code>.
-	 * @param players is an <code>Array</code> containing all <code>Player</code>.
+	 * @throws IllegalArgumentException if the {@code length} of {@code players} is not 2. 
+	 * @throws NullPointerException if {@code bp} is null or {@code players} is null.
 	 */
-	ChessBoard(ChessBoardPanel bp, Player[] players) throws IllegalArgumentException {
-		if (bp == null) {
-			throw new IllegalArgumentException("There must be a ChessBoardPanel.");
-		}
-		
-		else {
-			this.boardPanel = bp;
-		}
-		
-		if (players.length != 2) {
-			throw new IllegalArgumentException("The number of Players is not 2.");
-		}
-		
-		else {
-			this.players	= players;
-		}
-		
-		this.board			= new Tile[8][8];
-		this.tiles			= new Tile[2];
-		this.gameOver		= false;
-		this.currentPlayer	= 0;
-		this.nextPlayer		= 1;
+	ChessBoard(ChessBoardPanel bp, Player[] players) throws IllegalArgumentException, NullPointerException {
+		this.boardPanel = Objects.requireNonNull(bp, "ChessBoard must be on a ChessBoardPanel.");
+		Objects.requireNonNull(players, "There must be players playing.");
+		if (players.length != 2) throw new IllegalArgumentException("The number of Players is not 2.");
+		this.players	= players;
+		this.board	= new Tile[8][8];
+		this.tiles	= new Tile[2];
 		this.createBoard(); this.reset();
 	}
 	
-	
+	/**
+	 * Find the {@link King} on the {@link board}.
+	 * 
+	 * @param piece is the {@link Piece} used to find ally or enemy {@code King}.
+	 * @param opponent	{@code true} for opponent. {@code false} for ally.
+	 * 
+	 * @return the {@link Tile} that the {@code King} occupies.
+	 * 
+	 * @throws IllegalStateException if no {@code King} is found.
+	 */
+	public Tile findKing(Piece piece, boolean opponent) throws IllegalStateException {
+		Objects.requireNonNull(piece, "piece must be nonnull.");
+		for (Tile[] row : this.board) {
+			for (Tile tile : row) {
+				Piece tilePiece = tile.getPiece();
+				if (!(tilePiece instanceof King)) continue;
+				if (!opponent && piece.isAlly(tilePiece))		return tile;
+				else if (opponent && !piece.isAlly(tilePiece))	return tile;
+			}
+		} throw new IllegalStateException("King must always be on the board.");
+	}
 	
 	/**
-	 * Return a 2D {@link Arrays} of all {@link Tile}.
+	 * Find all {@link Rook} on the board.<br>
+	 * This also includes {@code Rook} that have been promoted from {@link Pawn}.
 	 * 
+	 * @param piece is the {@link Piece} used to find ally or enemy {@code Rook}.
+	 * @param opponent	{@code true} for opponent. {@code false} for ally.
+	 * 
+	 * @return	an {@code Array} of {@link Tile} containing all {@code Rook} on {@code board}.
+	 */
+	public Tile[] findRooks(Piece piece, boolean opponent) {
+		Objects.requireNonNull(piece, "piece must be nonnull.");
+		List<Tile> rooks = new ArrayList<Tile>(10);
+		for (Tile[] row : this.board) {
+			for (Tile tile : row) {
+				Piece tilePiece = tile.getPiece();
+				if (!(tilePiece instanceof Rook))				continue;
+				if (!opponent && piece.isAlly(tilePiece))		rooks.add(tile);
+				else if (opponent && !piece.isAlly(tilePiece))	rooks.add(tile);
+			}
+		} return rooks.toArray(new Tile[rooks.size()]);
+	}
+ 	
+ 	/**Move a {@link Piece} to its new position and update GUI*/
+	private void advance() {
+		this.tiles[1].setPiece(this.tiles[0].getPiece());
+		this.tiles[0].setPiece(null);
+		this.tiles[0].update();
+		this.tiles[1].update();
+		
+		this.currentIndex	= ++this.currentIndex % 2;
+		this.nextIndex		= ++this.nextIndex % 2;
+		this.currentPlayer	= this.players[this.currentIndex];
+		this.nextPlayer		= this.players[this.nextIndex];
+	}
+ 	
+ 	/**
+	 * Initialize and add {@link Tile} to the {@link #board}.
+	 */
+	private void createBoard() {
+		for (int row = 0; row < this.board.length; row ++) {
+			for (int column = 0; column < this.board[row].length; column ++) {
+				this.board[row][column] = new Tile(this.boardPanel, column, row);
+			}
+		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)											return true;
+		if (!(obj instanceof ChessBoard))							return false;
+		ChessBoard other = (ChessBoard) obj;
+		if (attackPiece == null) if (other.attackPiece != null)		return false;
+		else if (!attackPiece.equals(other.attackPiece))			return false;
+		if (!Arrays.deepEquals(board, other.board))					return false;
+		if (boardPanel == null) if (other.boardPanel != null)		return false;
+		else if (!boardPanel.equals(other.boardPanel))				return false;
+		if (currentIndex != other.currentIndex)						return false;
+		if (currentPlayer == null) if (other.currentPlayer != null)	return false;
+		else if (!currentPlayer.equals(other.currentPlayer))		return false;
+		if (gameOver != other.gameOver)								return false;
+		if (nextIndex != other.nextIndex)							return false;
+		if (nextPlayer == null) if (other.nextPlayer != null)		return false;
+		else if (!nextPlayer.equals(other.nextPlayer))				return false;
+		if (!Arrays.equals(players, other.players))					return false;
+		if (!Arrays.equals(tiles, other.tiles))						return false;
+		return true;
+	}
+	
+	/**
 	 * @return {@link #board}.
 	 */
 	public Tile[][] getBoard() {
@@ -101,434 +181,31 @@ class ChessBoard {
 	}
 	
 	/**
-	 * Determine the {@link Tile} at (<code>row</code>, <code>col</code>).
-	 * 
-	 * @param row is the row to access
-	 * @param col is the column to access
-	 * 
-	 * @return {@link #board}<code>[row][col]</code>
-	 */
- 	public Tile getTile(int row, int col) {
- 		return this.board[row][col];
-	}
-	
- 	/**
- 	 * Determine the original and new position of any {@link Piece} movement.
- 	 * 
- 	 * @return {@link #tiles}.
- 	 */
-	public Tile[] getTiles() {
-		return this.tiles;
-	}
-	
-	/**
-	 * Determine if the game if over.
-	 * 
-	 * @return <code>{@link #gameOver}</code>
+	 * @return {@link #gameOver}
 	 */
 	public boolean getGameOver() {
 		return this.gameOver;
 	}
 	
 	/**
-	 * Determine the current {@link Player}.
-	 * 
-	 * @return <code>{@link#currentPlayer}</code>
+	 * @return {@link #currentPlayer}
 	 */
-	public int getCurrentPlayer() {
+	public Player getCurrentPlayer() {
 		return this.currentPlayer;
 	}
 	
 	/**
-	 * Determine the next {@link Player}.
-	 * 
-	 * @return <code>{@link#nextPlayer}</code>
+	 * @return {@link #nextPlayer}
 	 */
-	public int getNextPlayer() {
+	public Player getNextPlayer() {
 		return this.nextPlayer;
 	}
 	
-	
-	
 	/**
-	 * Change {@link #gameOver} to <code>bool</code>.
-	 * 
-	 * @param bool is the new value of {@link #gameOver}.
-	 */
-	public void setGameOver(boolean bool) {
-		this.gameOver = bool;
-	}
-	
-	/**Empty {@link #tiles}.*/
-	public void resetTiles() {
-		Arrays.fill(this.tiles, null);
-	}
-	
-	/**
-	 * Assist {@link #movePiece()}
-	 * 
-	 * @param tile is a <code>Tile</code> clicked on.
-	 */
-	public void movePiece(Tile tile) {
-		this.setTiles(tile);
-			
-		if (this.tiles[0] != null && this.tiles[1] != null) {
-			this.movePiece();
-			this.resetTiles();
-		}
-	}
-		
-	/**Reset the Game*/
-	public void reset() {
-		this.resetBoard();
-		this.resetTiles();
-		this.gameOver		= false;
-		this.currentPlayer	= 0;
-		this.nextPlayer		= 1;
-	}
-	
-	/**
-	 * remove {@link MouseListener} and {@link KeyListener} from {@link Tile}.
-	 */
-	public void removeTileListeners() {
-		for (Tile[] row : this.board) {
-			for (Tile tile : row) {
-				tile.removeMouseListener(tile);
-				tile.removeKeyListener(tile);
-			}
-		}
-	}
-	
-	/**
-	 * Move {@link Piece} from current {@link Tile} to new {@link Tile}.
-	 * 
-	 */
-	private void movePiece() {
-		Piece tile0Piece = this.tiles[0].getPiece(), tile1Piece = this.tiles[1].getPiece();
-		
-		/**Check if <i>White</i> tries to move <i>Black</i> and vice versa.*/
-		if (this.players[this.currentPlayer].getPlayerColor().equals(tile0Piece.getPieceColor())) {
-			
-			/**Determine if move is legal*/
-			if (Piece.getLegal(tile0Piece, this.board, this.tiles)) {
-				
-				/**Determine if {@link Pawn} moves away from <b>Ally</b> {@link King}.*/
-				if (! Piece.determineKingisCheck(tile0Piece, this.board, this.tiles)) {
-					
-					/**A possible {@link Pawn} pomotion has took place and values need to be updated*/
-					tile0Piece = this.tiles[0].getPiece(); tile1Piece = this.tiles[1].getPiece();
-					Color tile1Color;
-					
-					try {
-						tile1Color = tiles[1].getPiece().getPieceColor();
-					}
-					
-					catch (NullPointerException npe) {
-						tile1Color = null;
-					}
-					/**Determine if a {@link Pawn} <i>collides</i> with any other {@link Pawn}*/
-					if (! Piece.collide(Piece.setTileCollide(tile0Piece, board, tiles))) {
-						
-						/**Capturing*/
-						if (tile1Color != null) {
-							
-							/**Allies can't capture each other*/
-							if (! tile1Piece.isAlly(tile0Piece)) {
-								try {
-									this.players[this.currentPlayer].increaseScore(Piece.getValue(tile1Piece));
-								}
-								
-								catch (IllegalAccessException iae) {
-									this.players[this.currentPlayer].increaseScore(0);;
-								}
-								
-								this.tempAdvance();
-								
-								/**Determine if moving a <code>Piece</code> to capture another piece puts the king in check*/
-								this.kingHasBeenCheck(tile0Piece, tiles);
-							}
-							
-							else {
-								JOptionPane.showMessageDialog(null, "You cannot capture Allies", "Careful!", JOptionPane.PLAIN_MESSAGE);
-							}
-						}
-						
-						/**Moving*/
-						else {
-							this.tempAdvance();
-							this.kingHasBeenCheck(tile0Piece, tiles);
-						}
-					}
-					
-					else {
-						JOptionPane.showMessageDialog(null, tile0Piece.toString() + " cannot jump!", "Careful!", JOptionPane.PLAIN_MESSAGE);
-					}
-					
-				}
-				
-				else {
-					JOptionPane.showMessageDialog(null, "This move will put the King in check!", "Careful!", JOptionPane.PLAIN_MESSAGE);
-				}
-			}
-			
-			else {
-				JOptionPane.showMessageDialog(null, tile0Piece.toString() + " can not move like this!", "Careful!", JOptionPane.PLAIN_MESSAGE);
-			}
-		}
-	}
-	
-	/**
-	 * Help determine if any move puts the
-	 * opponent {@link King} in <b>check</b>.
-	 * 
-	 * @param piece that is moving.
-	 * @param tiles are the original new positions of <code>piece</code>.
-	 * 
-	 * @throws	IllegalArgumentException if </br>
-	 * 			{@link Piece#checkKing(Piece, Tile[][], Tile[], Tile)}, </br>
-	 * 			{@link Piece#canUnCheck(Piece, Tile[][], Tile[])}, or </br>
-	 * 			{@link Piece#protect(Piece, Tile, Tile[][], Tile[])} throw their exceptions.
-	 * @throws	IllegalStateException if {@link #findKing(Piece, Tile[][], boolean)} throws its exception.
-	 */
-	private void kingHasBeenCheck(Piece piece, Tile[] tiles) {
-		/**Store original <code>Piece</code> positions*/
-		Piece tiles0OrigPiece = tiles[0].getPiece(), tiles1OrigPiece = tiles[1].getPiece();
-		
-		/**temporarily move <code>Piece</code>.*/
-		tiles[1].setPiece(tiles0OrigPiece);
-		tiles[0].setPiece(null);
-		
-		/**Find both <code>Kings</code>*/
-		Tile opponentKingTile = ChessBoard.findKing(piece, board, true), allyKingTile = ChessBoard.findKing(piece, board, false);
-		
-		this.attackPiece = null;
-		/**<code>Piece</code> has moved to check the Opponent's <code>King</code>.*/
-		if (Piece.checkKing(piece, this.board, this.tiles, opponentKingTile)) {
-			/**Determine if the <code>King</code> can move itself to safety*/
-			if (! Piece.canUnCheck(piece, this.board, this.tiles)) {
-				
-				/**Determine if a <code>Piece</code> can move to protect the <code>King</code>*/
-				if (Piece.protect(piece, opponentKingTile , this.board, this.tiles)) {
-					JOptionPane.showMessageDialog(null, "Check!", "Check!", JOptionPane.INFORMATION_MESSAGE);
-					attackPiece = piece;
-					tiles[0].setPiece(tiles0OrigPiece);
-					tiles[1].setPiece(tiles1OrigPiece);
-					this.advance();
-					this.gameOver = false;
-				}
-				
-				/**No <code>Piece</code> can protect the <code>King</code>*/
-				else {
-					JOptionPane.showMessageDialog(null, "Check Mate!\n" + this.players[this.currentPlayer].getName() + ", wins!", "Check Mate", JOptionPane.INFORMATION_MESSAGE);
-					tiles[0].setPiece(tiles0OrigPiece);
-					tiles[1].setPiece(tiles1OrigPiece);
-					this.advance();
-					this.gameOver = true;
-				}
-			}
-			
-			else {
-				JOptionPane.showMessageDialog(null, "Check!", "Check", JOptionPane.INFORMATION_MESSAGE);
-				((King)(opponentKingTile.getPiece())).setIsCheck(true);
-				attackPiece = piece;
-				tiles[0].setPiece(tiles0OrigPiece);
-				tiles[1].setPiece(tiles1OrigPiece);
-				this.advance();
-				this.gameOver = false;
-			}
-		}
-		
-		
-		/**<code>Piece</code> has moved to protect the Ally's <code>King</code>*/
-		else if (((King)(allyKingTile.getPiece())).isCheck() && attackPiece != null) {
-			if (Piece.protecting(attackPiece, this.getBoard(), tiles)) {
-				((King)(allyKingTile.getPiece())).setIsCheck(false);
-				tiles[0].setPiece(tiles0OrigPiece);
-				tiles[1].setPiece(tiles1OrigPiece);
-				this.advance();
-			}
-			
-			else {
-				JOptionPane.showMessageDialog(null, "You must protect the King!", "Carefull!", JOptionPane.WARNING_MESSAGE);
-			}
-		}
-		
-		/**<code>Piece</code> has moved*/
-		else {
-			tiles[0].setPiece(tiles0OrigPiece);
-			tiles[1].setPiece(tiles1OrigPiece);
-			this.advance();
-		}
-	}
-	
-	/**Move a {@link Piece} to its new position*/
-	private void advance() {
-		this.tiles[1].setPiece(this.tiles[0].getPiece());
-		this.tiles[0].setPiece(null);
-		
-		this.tiles[0].update();
-		this.tiles[1].update();
-		
-		this.currentPlayer	= (this.currentPlayer	+ 1) % 2;
-		this.nextPlayer		= (this.nextPlayer		+ 1) % 2;
-	}
-	
-	/**temporary moving*/
-	private void tempAdvance() {
-		this.tiles[1].setPiece(this.tiles[0].getPiece());
-	}
-	
-	/**Reset the {@link ChessBoard}*/
-	private void resetBoard() {
-		for (Tile[] row : this.board) {
-			for (Tile tile : row) {
-				tile.setPiece(null);
-				tile.setForeground(null);
-				tile.setText(null);
-			}
-		}
-		
-		for (Player player : this.players) {
-			player.setScore(0);
-		}
-		
-		this.placePieces();
-	}
-	
-	/**Place the {@link Piece} on {@link board}*/
-	private void placePieces() {
-		int[][] row		= new int[][]{{6,7}, {1,0}};	//Put piece at top or bottom of board
-		int indexInList = 0;
-		Tile tile;		//Ease of typing
-		Piece piece;	//Ease of typing
-		
-		for (int player : new int[]{0, 1}) {						//Black and White players
-			for (int i : row[player]) {								//Loop through their respective piece
-				for (int j : new int[]{0, 1, 2, 3, 4, 5, 6, 7}) {	//the column to put piece in	
-					tile = this.board[i][j];
-					piece = this.players[player].getPieces()[indexInList];
-					
-					if (piece instanceof Pawn) {			//Set pawn firstMove to true
-						((Pawn)(piece)).setFirstMove(false);
-					}
-					
-					if (piece instanceof King) {			//Set king isCheck to false
-						((King)(piece)).reset();
-					}
-					
-					tile.setPiece(piece);							//Set piece on Tile
-					tile.setText(tile.getPiece().toString());		//Set GUI elements
-					tile.setForeground(players[player].getPlayerColor());
-					
-					indexInList ++;
-				}
-			}
-			indexInList = 0;
-		}
-	}
-	
-	/**
-	 * Add {@link Tile} to the {@link #board}.
-	 */
-	private void createBoard() {
-		for (int row = 0; row < board.length; row ++) {
-			for (int column = 0; column < board[row].length; column ++) {
-				board[row][column] = new Tile(this.boardPanel, column, row);
-			}
-		}
-	}
-	
-	/**Place a {@link Tile} clicked on in the first available place.*/
-	private void setTiles(Tile tile) {
-		if (this.tiles[0] == null) {
-			if (tile.getPiece() == null) {
-				return;
-			}
-			
-			this.tiles[0] = tile;
-		}
-		
-		else if (this.tiles[1] == null) {
-			if (tile.equals(tiles[0])) {
-				this.resetTiles();
-			}
-			
-			else {
-				this.tiles[1] = tile;
-			}
-		}
-	}
-	
-	/**
-	 * Find the {@link King} on the {@link board}.
-	 * 
-	 * @param piece is the piece
-	 * @param board is the board
-	 * @param opponent is if looking for <i>opponent</i> or <i>ally</i>.
-	 * 
-	 * @return the {@link Tile} that the {@link King} occupies.
-	 * 
-	 * @throws IllegalStateException if no {@link King} is found.
-	 */
-	public static Tile findKing(Piece piece, Tile[][] board, boolean opponent) throws IllegalStateException {
-		for (Tile[] row : board) {
-			for (Tile tile : row) {
-				Piece tilePiece = tile.getPiece();
-				if (tilePiece instanceof King) {
-					if (piece.isAlly(tilePiece)) {
-						if (! opponent) {
-							return tile;
-						}
-					}
-					
-					else {
-						if (opponent) {
-							return tile;
-						}
-					}
-				}
-			}
-		}
-		throw new IllegalStateException("King must always be on the board.");
-	}
-	
-	/**
-	 * Find all {@link Rook} on the board
-	 * 
-	 * @param piece is the piece
-	 * @param board is the board
-	 * @param opponent is if looking for <i>opponent</i> or <i>ally</i>.
-	 * 
-	 * @return	an <code>Array</code> of {@link Tile} containing all {@link Rook} on {@link board}.
-	 * 
-	 * @implNote Note this also includes {@link Rook} promoted from {@link Pawn}.
-	 */
-	public static Tile[] findRooks(Piece piece, Tile[][] board, boolean opponent) {
-		ArrayList<Tile> rooks = new ArrayList<Tile>(10);
-		for (Tile[] row : board) {
-			for (Tile tile : row) {
-				Piece tilePiece = tile.getPiece();
-				if (tilePiece instanceof Rook) {
-					if (piece.isAlly(tilePiece)) {
-						if (! opponent) {
-							rooks.add(tile);
-						}
-					}
-					
-					else {
-						if (opponent) {
-							rooks.add(tile);
-						}
-					}
-				}
-			}
-		}
-		
-		Tile[] rook = new Tile[rooks.size()];
-		for (int i = 0; i < rook.length; i++) {
-			rook[i] = rooks.get(i);
-		}
-		return rook;
+ 	 * @return {@link #tiles}.
+ 	 */
+	public Tile[] getTiles() {
+		return this.tiles;
 	}
 	
 	@Override
@@ -538,66 +215,209 @@ class ChessBoard {
 		result = prime * result + ((attackPiece == null) ? 0 : attackPiece.hashCode());
 		result = prime * result + Arrays.deepHashCode(board);
 		result = prime * result + ((boardPanel == null) ? 0 : boardPanel.hashCode());
-		result = prime * result + currentPlayer;
+		result = prime * result + currentIndex;
+		result = prime * result + ((currentPlayer == null) ? 0 : currentPlayer.hashCode());
 		result = prime * result + (gameOver ? 1231 : 1237);
-		result = prime * result + nextPlayer;
+		result = prime * result + nextIndex;
+		result = prime * result + ((nextPlayer == null) ? 0 : nextPlayer.hashCode());
 		result = prime * result + Arrays.hashCode(players);
 		result = prime * result + Arrays.hashCode(tiles);
 		return result;
 	}
 	
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ChessBoard other = (ChessBoard) obj;
-		if (attackPiece == null) {
-			if (other.attackPiece != null)
-				return false;
-		} else if (!attackPiece.equals(other.attackPiece))
-			return false;
-		if (!Arrays.deepEquals(board, other.board))
-			return false;
-		if (boardPanel == null) {
-			if (other.boardPanel != null)
-				return false;
-		} else if (!boardPanel.equals(other.boardPanel))
-			return false;
-		if (currentPlayer != other.currentPlayer)
-			return false;
-		if (gameOver != other.gameOver)
-			return false;
-		if (nextPlayer != other.nextPlayer)
-			return false;
-		if (!Arrays.equals(players, other.players))
-			return false;
-		if (!Arrays.equals(tiles, other.tiles))
-			return false;
-		return true;
+	/**
+	 * Help determine if any move puts the <b>opponent</b> {@link King} in <b>check</b>.
+	 * 
+	 * @param piece that is moving.
+	 * @param tiles are the original new positions of {@code piece}.
+	 */
+	private void kingHasBeenCheck(Piece piece, Tile[] tiles) {
+		Objects.requireNonNull(piece, "There must be a piece moving.");
+		Objects.requireNonNull(tiles, "The piece must be moving.");
+		if (tiles.length != 2) throw new IllegalArgumentException("Illegal number of elements in tiles.");
+		
+		//Store original Piece positions
+		Piece tiles0OrigPiece = tiles[0].getPiece(), tiles1OrigPiece = tiles[1].getPiece();
+		
+		//temporarily move <code>Piece</code>.
+		tiles[1].setPiece(tiles0OrigPiece);
+		tiles[0].setPiece(null);
+		
+		//Find both King
+		Tile opponentKingTile = this.findKing(piece, true), allyKingTile = this.findKing(piece, false);
+		King opponentKing = (King)opponentKingTile.getPiece(), allyKing = (King)allyKingTile.getPiece();
+		
+		this.attackPiece = null;
+		if (piece.checkKing(this.board, this.tiles, opponentKingTile)) {			//Piece has moved to check the Opponent's King.
+			if (!piece.canUnCheck(this, this.tiles)) {						//Determine if the King can move itself to safety
+				if (piece.protect(opponentKingTile, this.board, this.tiles)) {		//Determine if a Piece can move to protect the King
+					JOptionPane.showMessageDialog(null, "Check!", "Check!", JOptionPane.INFORMATION_MESSAGE);
+					attackPiece = piece;
+					tiles[0].setPiece(tiles0OrigPiece);
+					tiles[1].setPiece(tiles1OrigPiece);
+					this.advance();
+					this.gameOver = false;
+				} else { //No Piece can protect the King
+					JOptionPane.showMessageDialog(null, "Check Mate!\n" + this.currentPlayer.getName() + ", wins!", "Check Mate", JOptionPane.INFORMATION_MESSAGE);
+					tiles[0].setPiece(tiles0OrigPiece);
+					tiles[1].setPiece(tiles1OrigPiece);
+					this.advance();
+					this.gameOver = true;
+				}
+			} else {	//Piece is able to protect the King.
+				JOptionPane.showMessageDialog(null, "Check!", "Check", JOptionPane.INFORMATION_MESSAGE);
+				opponentKing.setIsCheck(true);
+				attackPiece = piece;
+				tiles[0].setPiece(tiles0OrigPiece);
+				tiles[1].setPiece(tiles1OrigPiece);
+				this.advance();
+				this.gameOver = false;
+			}
+		} else if (allyKing.isCheck() && attackPiece != null) { //Piece has moved to protect the Ally's King
+			if (attackPiece.protecting(this, tiles)) {
+				allyKing.setIsCheck(false);
+				tiles[0].setPiece(tiles0OrigPiece);
+				tiles[1].setPiece(tiles1OrigPiece);
+				this.advance();
+			} else JOptionPane.showMessageDialog(null, "You must protect the King!", "Carefull!", JOptionPane.WARNING_MESSAGE);
+		} else { //Piece has moved
+			tiles[0].setPiece(tiles0OrigPiece);
+			tiles[1].setPiece(tiles1OrigPiece);
+			this.advance();
+		}
+	}
+	
+	/**
+	 * Move {@link Piece} from {@link #tiles}{@code [0]} to {@code tiles[1]}.
+	 */
+	private void movePiece() {
+		Piece tile0Piece = this.tiles[0].getPiece(), tile1Piece = this.tiles[1].getPiece();
+		if (this.currentPlayer.getPlayerColor() != tile0Piece.getPieceColor()) return;
+		if (!tile0Piece.getLegal(this.board, this.tiles)) {
+			JOptionPane.showMessageDialog(null, tile0Piece.toString() + " can not move like this!", "Careful!", JOptionPane.PLAIN_MESSAGE);
+			return;
+		} if (tile0Piece.determineKingisCheck(this, this.tiles)) {	//Determine if Pawn moves away from Ally King.
+			JOptionPane.showMessageDialog(null, "This move will put the King in check!", "Careful!", JOptionPane.PLAIN_MESSAGE);
+			return;
+		} if (Piece.collide(tile0Piece.setTileCollide(board, tiles))) {	//Determine if a Pawn collides with any other Pawn.
+			JOptionPane.showMessageDialog(null, tile0Piece.toString() + " cannot jump!", "Careful!", JOptionPane.PLAIN_MESSAGE);
+			return;
+		} if (tile1Piece == null) {	//Capturing
+			this.tempAdvance();
+			this.kingHasBeenCheck(tile0Piece, tiles);
+			return;
+		} if (tile1Piece.isAlly(tile0Piece)) { //Allies can't capture each other.
+			JOptionPane.showMessageDialog(null, "You cannot capture Allies", "Careful!", JOptionPane.PLAIN_MESSAGE);
+			return;
+		} try {
+			this.currentPlayer.increaseScore(tile1Piece.getValue());
+		} catch (IllegalAccessException iae) {
+			throw new IllegalStateException("King somehow got captured.");
+		} this.tempAdvance();
+		this.kingHasBeenCheck(tile0Piece, tiles);
+	}
+	
+	/**
+	 * Assist {@link #movePiece()}
+	 * 
+	 * @param tile is a {@link Tile} clicked on.
+	 */
+	public void movePiece(Tile tile) {
+		Objects.requireNonNull(tile, "Piece must move to a new Tile.");
+		this.setTiles(tile);
+			
+		if (this.tiles[0] != null && this.tiles[1] != null) {
+			this.movePiece();
+			this.resetTiles();
+		}
+	}
+	
+	/**Place the {@link Piece} on {@link #board}*/
+	private void placePieces() {
+		int[][] row		= {{6,7}, {1,0}};	//Put piece at top or bottom of board
+		int indexInList = 0;
+		Tile tile;
+		Piece piece;
+		
+		for (int player : new int[] {0, 1}) {						//Black and White players
+			for (int i : row[player]) {								//Loop through their respective piece
+				for (int j : new int[] {0, 1, 2, 3, 4, 5, 6, 7}) {	//the column to put piece in	
+					tile = this.board[i][j];
+					piece = this.players[player].getPieces()[indexInList];
+					piece.reset();
+					tile.setPiece(piece);							//Set piece on Tile
+					tile.setText(tile.getPiece().toString());		//Set GUI elements
+					tile.setForeground(players[player].getPlayerColor().color);
+					indexInList ++;
+				}
+			} indexInList = 0;
+		}
+	}
+	
+	/**Reset the Game*/
+	public void reset() {
+		this.resetBoard();
+		this.resetTiles();
+		this.gameOver		= false;
+		this.currentIndex	= 0;
+		this.nextIndex		= 1;
+		this.currentPlayer	= this.players[this.currentIndex];
+		this.nextPlayer		= this.players[this.nextIndex];
+	}
+	
+	/**Reset the {@link #board}*/
+	private void resetBoard() {
+		for (Tile[] row : this.board) {
+			for (Tile tile : row) {
+				tile.setPiece(null);
+				tile.setForeground(null);
+				tile.setText(null);
+			}
+		} for (Player player : this.players) {
+			player.setScore(0);
+		} this.placePieces();
+	}
+	
+	/**Empty {@link #tiles}.*/
+	public void resetTiles() {
+		Arrays.fill(this.tiles, null);
+	}
+	
+	/**
+	 * Change {@link #gameOver} to {@code bool}.
+	 * 
+	 * @param bool is the new value of {@link #gameOver}.
+	 */
+	public void setGameOver(boolean bool) {
+		this.gameOver = bool;
+	}
+	
+	/**
+	 * Place a {@link Tile} clicked on in the first available place.
+	 * 
+	 * @param tile is the {@code Tile} clicked on.
+	 */
+	private void setTiles(Tile tile) {
+		if (this.tiles[0] == null)
+			if (tile.getPiece() == null) return;
+			else this.tiles[0] = tile;
+		else if (this.tiles[1] == null)
+			if (tile.equals(tiles[0])) this.resetTiles();
+			else this.tiles[1] = tile;
+	}
+	
+	/**temporary moving*/
+	private void tempAdvance() {
+		this.tiles[1].setPiece(this.tiles[0].getPiece());
 	}
 	
 	@Override
 	public String toString() {
 		String str = "";
-		
 		for (Tile[] row : this.board) {
 			for (Tile tile : row) {
-				if (tile.getPiece() == null) {
-					str += tile.toString() + "\t";
-				}
-				
-				else {
-					str += tile.getPiece() + "\t";
-				}
-			}
-			
-			str += "\n";
-		}
-		
-		return str;
+				str += tile.getPiece() == null ? tile.toString() + "\t" : tile.getPiece().toString();
+			} str += "\n";
+		} return str;
 	}
 }

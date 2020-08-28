@@ -1,96 +1,92 @@
 import java.awt.Color;
+import java.util.Objects;
 
 /**
- * This <code>Queen</code> class represents a
- * Queen in the game of Chess.
+ * This {@code Queen} class represents a Queen in the game of Chess. <br>
+ * This is a subclass of {@link Piece}
  * 
- * @version 16 March 2020
+ * @version 21 March 2020
  * @author MrPineapple065
  *
  */
 public class Queen extends Piece {
 	/**
-	 * The amount of points that <code>Queen</code> is worth.
+	 * {@link Bishop} to help with {@link #getLegal(Tile[][], Tile[])} and {@link #setTileCollide(Tile[][], Tile[])}
 	 */
-	private static final int	VALUE	= 0x09;
+	private final Bishop bishop;
 	
 	/**
-	 * Creates a <code>Queen</code> that is <code>color</code>.
-	 * 
-	 * @param color is the color of <code>Queen</code>.
-	 * @throws IllegalArgumentException if <code>color</code> is <code>null</code>
+	 * {@link Rook} to help with {@link #getLegal(Tile[][], Tile[])} and {@link #setTileCollide(Tile[][], Tile[])}
 	 */
-	public Queen(Color color) throws IllegalArgumentException {
+	private final Rook rook;
+
+	/**
+	 * Creates a {@code Queen} that is {@code color}.
+	 * 
+	 * @param color is the {@link Color} of {@code Queen}.
+	 */
+	public Queen(PieceColor color) {
 		super(color);
+		this.bishop = new Bishop(color);
+		this.rook = new Rook(color);
 	}
-	
-	/**
-	 * Determine the value of <code>Queen</code>
-	 * 
-	 * @return <b><i>{@link #VALUE}</i></b>
-	 */
-	public static int getValue() {
-		return VALUE;
-	}
-	
-	/**
-	 * Determine if move <code>Queen</code> makes from <code>tiles[0]</cod>< to <code>tiles[1]</code> is legal. </br>
-	 * <code>Queen</code> may move in any direction for any number of <code>Tile</code>.
-	 * 
-	 * @param tiles are the original and new positions of <code>Queen</code>
-	 * 
-	 * @return an <code>Array</code> of <code>Tile<code> that the <code>Queen</code>
-	 *			will take on its journey from <code>tiles[0]</code> to <code>tiles[1]</code>.
-	 *
-	 * @throws IllegalArgumentException
-	 */
-	public static boolean getLegal(Tile[] tiles) throws IllegalArgumentException {
-		if (tiles == null) {
-			throw new IllegalArgumentException("Queen must move.");
-		}
-		return (Rook.getLegal(tiles) || Bishop.getLegal(tiles));
-	}
-	
-	/**
-	 * Determine all <code>Tile</code> from <code>tiles[0]</code> to <code>tiles[1]</code> that <code>Queen</code> travels over in its journey.
-	 * 
-	 * @param piece is a piece.
-	 * @param board is the board.
-	 * @param tiles are the original and new positions of <code>Queen</code>.
-	 * 
-	 * @return	an <code>Array</code> of <code>Tile<code> that the <code>Queen</code>
-	 *			will take on its journey from <code>tiles[0]</code> to <code>tiles[1]</code>.
-	 *
-	 * @throws IllegalStateException
-	 * @throws IllegalArgumentException
-	 */
-	public static Tile[] setTilesCollide(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalStateException, IllegalArgumentException {
-		if (tiles == null) {
-			throw new IllegalArgumentException("Queen must move.");
-		}
-		
-		//Queen moves like Bishop
-		if (Bishop.getLegal(tiles)) {
-			return Bishop.setTilesCollide(piece, board, tiles);
-		}
-		
-		//Queen moves like Rook
-		else if (Rook.getLegal(tiles)) {
-			return Rook.setTilesCollide(piece, board, tiles);
-		}
-		
-		throw new IllegalStateException("Queen cannot move like this.");
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)								return true;
+		if (!(obj instanceof Queen))					return false;
+		Queen other = (Queen) obj;
+		if (bishop == null) if (other.bishop != null)	return false;
+		else if (!bishop.equals(other.bishop))			return false;
+		if (rook == null) if (other.rook != null)		return false;
+		else if (!rook.equals(other.rook))				return false;
+		return true;
 	}
 
 	/**
-	 * @return <code>String</code> representation of <code>Queen</code>.
+	 * <p>Determine if move {@code Queen} makes from {@code tiles[0]} to {@code tiles[1]} is legal. </p>
+	 * <p>{@code Queen} may move in any direction for any number of {@link Tile}.</p>
 	 */
 	@Override
+	public boolean getLegal(Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
+		Objects.requireNonNull(tiles, "Queen must move.");
+		return this.rook.getLegal(board, tiles) || this.bishop.getLegal(board, tiles);
+	}
+
+	@Override
+	public int getValue() throws IllegalAccessException {
+		return 9;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((bishop == null) ? 0 : bishop.hashCode());
+		result = prime * result + ((rook == null) ? 0 : rook.hashCode());
+		return result;
+	}
+
+	public void reset() {}
+	
+	@Override
+	public Tile[] setTileCollide(Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
+		//Queen moves like Bishop
+		if (this.bishop.getLegal(board, tiles))		return this.bishop.setTileCollide(board, tiles);
+		//Queen moves like Rook
+		else if (this.rook.getLegal(board, tiles))	return this.rook.setTileCollide(board, tiles);
+		throw new IllegalStateException("Queen cannot move like this.");
+	}
+
+	@Override
 	public String toString() {
-		if (super.getPieceColor().equals(Piece.WHITE)) {
+		switch (this.pieceColor) {
+		case White:
 			return "\u2655";
+		case Black:
+			return "\u265B";
+		default:
+			return default_name;
 		}
-		
-		return "\u265B";
 	}
 }

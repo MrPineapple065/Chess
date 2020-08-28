@@ -1,174 +1,105 @@
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
- * This <code>Bishop</code> class represents a
- * Bishop in the game of chess.
+ * This {@code Bishop} class represents a Bishop in the game of chess.
+ * This is a subclass of {@link Piece}.
  * 
- * @version 16 March 2020
+ * @version 28 August 2020
+ * @since 21 March 2020
  * @author MrPineapple065
- *
  */
 public class Bishop extends Piece {
 	/**
-	 * The amount of points that <code>Bishop</code> is worth
-	 */
-	private static final int 	VALUE	= 3;
-	
-	/**
-	 * Create a <code>Bishop</code> that is <code>color</code>.
+	 * Create a {@code Bishop} that is {@code color}.
 	 * 
-	 * @param color is the color of <code>Piece</code>.
-	 * 
-	 * @throws IllegalArgumentException if <code>color</code> is <code>null</code>.
+	 * @param color is the {@link Color} of {@code Bishop}.
 	 */
-	public Bishop(Color color) throws IllegalArgumentException {
+	public Bishop(PieceColor color) {
 		super(color);
 	}
 	
-	/**
-	 * Determine the value of <code>Bishop</code>
-	 * @return <i><b>{@link #VALUE}</b></i>
-	 */
-	public static int getValue() {
-		return VALUE;
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)				return true;
+		if (!(obj instanceof Bishop))	return false;
+		return true;
 	}
 	
 	/**
-	 * Determine if move <code>Bishop</code> makes from <code>tiles[0]</code> to <code>tiles[1]</code> is legal. </br>
-	 * <code>Bishop</code> may <i>only</i> move <b>diagonally</b>.
-	 * 
-	 * @param tiles are the original and new positions of <code>Bishop</code>.
-	 * @return	<code>true</code> if the move is legal. </br>
-	 * 			<code>false</code> if the move is illegal.
-	 * 
-	 * @throws IllegalArgumentException if <code>tiles</code> is <code>null</code>
+	 * <p>Determine if move {@code Bishop} makes from {@code tiles[0]} to {@code tiles[1]} is legal.</p>
+	 * <p>{@code Bishop} may must move <b>diagonally</b>.</p>
 	 */
-	public static boolean getLegal(Tile[] tiles) throws IllegalArgumentException {
-		if (tiles == null) {
-			throw new IllegalArgumentException("Bishop must move.");
-		}
-		
-		int oldX = tiles[0].getRow(), oldY = tiles[0].getColumn(), newX = tiles[1].getRow(), newY = tiles[1].getColumn();
-		
-		return (Math.abs(oldX - newX) == Math.abs(oldY - newY));
+	@Override
+	public boolean getLegal(Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
+		Objects.requireNonNull(tiles, "Bishop must move");
+		if (tiles.length != 2) throw new IllegalArgumentException("Illegal number of elements in tiles.");
+		return Math.abs(tiles[0].getRow() - tiles[1].getRow()) == Math.abs(tiles[0].getColumn() - tiles[1].getColumn());
 	}
 
-	/**
-	 * Determine all <code>Tile</code> from <code>tiles[0]</code> to
-	 * <code>tiles[1]</code> that <code>Bishop</code> travels over in its journey
-	 * 
-	 * @param piece is the piece moving.
-	 * @param board is the board
-	 * @param tiles are the original and new positions of <code>Bishop</code>.
-	 * 
-	 * @return an <code>Array</code> of <code>Tile</code> that <code>Bishop</code> takes along its journey.
-	 * 
-	 * @throws IllegalArgumentException if any of the <code>parameters</code> are <code>null<code>.
-	 */
-	public static Tile[] setTilesCollide(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
-		try {
-			Bishop.iae(piece, board, tiles);
-		}
-		
-		catch (IllegalArgumentException iae) {
-			throw iae;
-		}
+	@Override
+	public int getValue() {
+		return 3;
+	}
+
+	@Override
+	public int hashCode() {
+		int prime = 31;
+		int result = 1;
+		result = prime * result + pieceColor.hashCode();
+		result = prime * result + 3;
+		return result;
+	}
+	
+	public void reset() {}
+	
+	@Override
+	public Tile[] setTileCollide(Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
+		Objects.requireNonNull(board, "Bishop must be on a board");
+		Objects.requireNonNull(tiles, "Bishop must move");
+		if (tiles.length != 2) throw new IllegalArgumentException("Illegal number of elements in tiles.");
 		
 		ArrayList<Tile> temp = new ArrayList<Tile>();
 		int oldX = tiles[0].getRow(), oldY = tiles[0].getColumn(), newX = tiles[1].getRow(), newY = tiles[1].getColumn();
 		int i = oldX, j = oldY;
+		int dx = 0, dy = 0;
 		
-		if (newX < oldX) {
-			if (newY < oldY) {
-				//Going NW
-				for (int count = newX; count <= oldX; count++) {
-					temp.add(board[i][j]);
-					i--; j--;
-				}
+		if (newX < oldX)
+			if (newY < oldY) {	//North West
+				dx = -1; dy = -1;
+			} else {			//North East
+				dx = -1; dy = 1;
 			}
-			
-			else {
-				//Going NE
-				for (int count = newX; count <= oldX; count++) {
-					temp.add(board[i][j]);
-					i--; j++;
-				}
+		else
+			if (newY < oldY) {	//South West
+				dx = 1; dy = -1;
+			} else {			//South East
+				dx = 1; dy = 1;
 			}
-		}
 		
-		else {
-			if (newY < oldY) {
-				//Going SW
-				for (int count = oldX; count <= newX; count++) {
-					temp.add(board[i][j]);
-					i++; j--;
-				}
-			}
-			
-			else {
-				//Going SE
-				for (int count = oldX; count <= newX; count++) {
-					temp.add(board[i][j]);
-					i++; j++;
-				}
-			}
+		for (int count = 0; count <= Math.abs(oldX - newX); count++) {
+			temp.add(board[i][j]);
+			i += dx; j += dy;
 		}
 		
 		//Cannot collide with self
-		if (piece.equals(temp.get(0).getPiece())) {
-			temp.remove(0);
-		}
+		temp.remove(board[oldX][oldY]);
 		
 		//Cannot collide when capturing
-		if (temp.get(temp.size() - 1).getPiece() != null) {
-			if (! piece.isAlly(temp.get(temp.size() - 1).getPiece())) {
-				temp.remove(temp.size() - 1);
-			}
-		}
-		
-		
-		Tile[] t = new Tile[temp.size()];
-		for (int k = 0; k < t.length; k++) {
-			t[k] = temp.get(k);
-		}
-		
-		return t;
-
-	}
-	
-	/**
-	 * Determine if any <code>parameters</code> are <code>null</code>.
-	 * 
-	 * @param piece is the Bishop
-	 * @param board is the board
-	 * @param tiles are the original and new positions of <code>Bishop</code>
-	 * 
-	 * @throws IllegalArgumentException with the correct information.
-	 */
-	private static void iae(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
-		if (piece == null) {
-			throw new IllegalArgumentException("There must be a Bishop.");
-		}
-		
-		if (board == null) {
-			throw new IllegalArgumentException("There must be a board.");
-		}
-		
-		if (tiles == null) {
-			throw new IllegalArgumentException("Bishop must move.");
-		}
+		if (!this.isAlly(temp.get(temp.size() - 1).getPiece())) temp.remove(temp.size() - 1);
+		return temp.toArray(new Tile[temp.size()]);
 	}
 
-	/**
-	 * @return <code>String</code> representation of <code>Bishop</code>
-	 */
 	@Override
 	public String toString() {
-		if (super.getPieceColor().equals(Piece.WHITE)) {
+		switch (this.pieceColor) {
+		case White:
 			return "\u2657";
+		case Black:
+			return "\u265D";
+		default:
+			return default_name;
 		}
-		
-		return "\u265D";
 	}
 }

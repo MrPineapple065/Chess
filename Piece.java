@@ -1,467 +1,307 @@
-import java.awt.Color;
+import java.util.Objects;
 
 /**
- * This <code>Piece</code> class represents
- * all pieces in the game of Chess.
+ * This {@code Piece} class represents all pieces in the game of Chess.
  * 
- * @version 16 March 2020
  * @author MrPineapple065
+ * @version 27 August 2020
+ * @since 21 March 2020
  */
-public class Piece {
+public abstract class Piece {
 	/**
-	 * <code>Color</code> to represent the <i>White <code>Player</code></i>.
+	 * Used when this has an invalid {@link #pieceColor}.
+	 * @see #toString()
 	 */
-	public static final Color WHITE		= new Color(0xD3D3D3);
+	protected static final String default_name = "\uFFFD";
 	
 	/**
-	 * <code>Color</code> to represent the <i>Black <code>Player</code></i>
+	 * {@link PieceColor} to represent the {@code Piece} color.
 	 */
-	public static final Color BLACK 	= new Color(0x565352);
+	protected PieceColor pieceColor;
 	
 	/**
-	 * <code>Color</code> to represent the <code>Piece</code> color.
-	 */
-	private Color pieceColor;	//the color of the piece
-	
-	/**
-	 * Create a <code>Piece</code> that is <code>color</code>.
+	 * Create a {@code Piece}.
 	 * 
-	 * @param color is color of <code>this</code>
-	 * 
-	 * @throws IllegalArgumentException if <code>color</code> is <code>null</code>
+	 * @param color is {@link PieceColor} of this.
 	 */
-	public Piece(Color color) throws IllegalArgumentException {
-		if (color == null) {
-			throw new IllegalArgumentException("Piece must have a color");
-		}
-		
-		if (! (color.equals(WHITE)) && ! (color.equals(BLACK))) {
-			throw new IllegalArgumentException("Color must be " + WHITE.toString() + " or " + BLACK.toString());
-		}
-		
-		this.pieceColor	= color;
+	protected Piece(PieceColor color){
+		this.pieceColor	= Objects.requireNonNull(color, "Piece must have a color.");;
 	}
 	
 	/**
-	 * Get the score if each piece's respective value
+	 * Determine if {@code piece} <i>collides</i> with other {@code piece} along its journey.
 	 * 
-	 * @param piece to get score for.
-	 * @return <code>int</code> that is the <code>Piece</code> score.
+	 * @param tilesCollide an {@code Array} of {@link Tile} a {@code piece} takes on its journey.
 	 * 
-	 * @throws IllegalAccessException if <code>piece</code> is <code>instanceof</code> <code>King</code>. 
+	 * @return	{@code true} if {@code piece} collides. <br>
+	 * 			{@code false} if {@code piece} does not collide.
 	 */
-	public static int getValue(Piece piece) throws IllegalAccessException {
-		if (piece instanceof Pawn) {
-			return Pawn.getValue();
-		}
-		
-		else if (piece instanceof Knight) {
-			return Knight.getValue();
-		}
-		
-		else if (piece instanceof Bishop) {
-			return Bishop.getValue();
-		}
-		
-		else if (piece instanceof Rook) {
-			return Rook.getValue();
-		}
-		
-		else if (piece instanceof Queen) {
-			return Queen.getValue();
-		}
-		
-		throw new IllegalAccessException("The King does not have a value");
-	}
-	
-	/**
-	 * Determine if <code>piece</code> moving from <code>tiles[0]</code>
-	 * to <code>tiles[0]</code> is a legal move.
-	 * 
-	 * @param piece that is moving.
-	 * @param board is the board.
-	 * @param tiles that holds original position and new position.
-	 * 
-	 * @return	<code>false</code> if move is illegal. </br>
-	 * 			<code>true</code> if move is legal.
-	 *  
-	 * @throws	IllegalArgumentException if </br>
-	 * 			{@link Pawn#getLegal(Pawn, Tile[][], Tile[])}, </br> 
-	 * 			{@link Bishop#getLegal(Tile[])}, </br>
-	 * 			{@link Rook#getLegal(Rook, Tile[])}, </br>
-	 * 			{@link Knight#getLegal(Tile[])}, </br>
-	 * 			{@link Queen#getLegal(Tile[])}, and </br>
-	 * 			{@link King#getLegal(King, Tile[])} throw their exceptions
-	 * 
-	 */
-	public static boolean getLegal(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException {
-		/**Determine the type of <code>Piece</code>*/
-		if (piece instanceof Pawn) {
-			return Pawn.getLegal((Pawn)piece, board, tiles);
-		}
-		
-		else if (piece instanceof Knight) {
-			return Knight.getLegal(tiles);
-		}
-		
-		else if (piece instanceof Bishop) {
-			return Bishop.getLegal(tiles);
-		}
-		
-		else if (piece instanceof Rook) {
-			return Rook.getLegal((Rook)piece, tiles);
-		}
-		
-		else if (piece instanceof Queen) {
-			return Queen.getLegal(tiles);
-		}
-		
-		else if (!King.getLegal((King)piece, tiles)) {
-			if (King.hasCastled((King)piece, board, tiles)) {
-				King.castle(piece, tiles, board);
-				return true;
-			}
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Determine if <code>piece</code> <i>collides</i> with other <code>piece</code> along its journey.
-	 * 
-	 * @param tilesCollide an <code>Array</code> of <code>Tile</code> a </code>Piece</code> takes on its journey.
-	 * 
-	 * @return	<code>true</code> if <code>piece</code> collides. </br>
-	 * 			<code>false</code> if <code>piece</code> does not collide.
-	 * 
-	 * @throws IllegalArgumentException if <code>tilesCollide</code> is <code>null</code>.
-	 */
-	public static boolean collide(Tile[] tilesCollide) throws IllegalArgumentException {
-		if (tilesCollide == null) {
-			throw new IllegalArgumentException("Piece must move.");
-		}
-		
+	public static boolean collide(Tile[] tilesCollide) {		
+		Objects.requireNonNull(tilesCollide, "Piece must move.");
 		for (Tile tile : tilesCollide) {
-			if (tile.getPiece() != null) {	//find a piece in this list
-				return true;
-			}
-		}
-		return false;
+			if (tile.getPiece() != null) return true;
+		} return false;
 	}
 	
 	/**
-	 * Determine if the <code>King</code> can move out of a <b>check</b>.
+	 * Determine if the {@link King} can move out of a <b>check</b>.
 	 * 
-	 * @param piece that is <i>moving</i>.
-	 * @param board is the board.
-	 * @param tiles are the original and new positions of <code>piece</code>.
+	 * @param board is the {@link ChessBoard}.
+	 * @param tiles are the original and new positions of this.
 	 * 
-	 * @return	<code>true</code> if <code>King</code> can move. </br>
-	 * 			<code>false</code> if <code>King</code> cannot move.
-	 *  
-	 * @throws IllegalArgumentException if {@link #checkKing(Piece, Tile[][], Tile[], Tile)} throws its exception
-	 * @throws IllegalStateException if ChessBoard.findKing(Piece, Tile[][], boolean) throws its exception
+	 * @return	{@code true} if {@code King} can move. <br>
+	 * 			{@code false} if {@code King} cannot move.
 	 */
-	public static boolean canUnCheck(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException, IllegalStateException {
+	public boolean canUnCheck(ChessBoard board, Tile[] tiles) {
+		Objects.requireNonNull(board, "There must be a board.");
+		Objects.requireNonNull(tiles, "Piece must have moved");
+		if (tiles.length != 2) throw new IllegalArgumentException("Illegal number of elements in tiles.");
+		
 		Tile kingTile;
 		try {
-			kingTile = ChessBoard.findKing(piece, board, true);	//King Tile
-		}
-		
-		catch (IllegalStateException ise) {
+			kingTile = board.findKing(this, true);
+		} catch (IllegalStateException ise) {
 			throw ise;
 		}
 		
-		Tile tempKingTile;									//The Tile to check for check
-		Piece tempKingTilePiece;
-		boolean[] check = new boolean[9];					//The list to return
-		int row		= kingTile.getRow(), column = kingTile.getColumn();
-		int index = 0;										//index in check
+		Tile[][] b = board.getBoard(); //Board
+		Tile tempKingTile;		//The Tile to check for check
+		Piece tempKingTilePiece;//The piece on tempKingtile
+		int row	= kingTile.getRow(), column = kingTile.getColumn();
 		
 		for (int x : new int[] {-1, 0, 1}) {
 			for (int y : new int[] {-1, 0, 1}) {
+				if (x == 0 && y == 0) continue;
 				try {
-					/**set the <code>tempKingTile</code> to a surrounding <code>Tile</code>*/
-					tempKingTile = board[row + x][column + y];
+					//set the tempKingTile to a surroundingTile.
+					tempKingTile = b[row + x][column + y];
 					tempKingTilePiece = tempKingTile.getPiece();
-					
-					/**A <code>Piece</code> is on a potential tile to move to*/
-					if (tempKingTilePiece != null) {
-						
-						//Determine if this new tile has an Ally or an Enemy
-						if (! tempKingTilePiece.getPieceColor().equals(kingTile.getPiece().getPieceColor())) {
-							//tile has an enemy piece on it
-							check[index] = ! Piece.checkKing(piece, board, tiles, tempKingTile);
-						}
-						
-						else {
-							//tile has an ally piece on it
-							check[index] = false;
-						}
-					}
-					
-					else {
-						//If a piece can attack this new tile add false
-						//else add true
-						check[index] = ! Piece.checkKing(piece, board, tiles, tempKingTile);
-					}
-				}
-				
-				catch (ArrayIndexOutOfBoundsException aiooe) {
-					check[index] = false;	//can't move off the board
-				}	
-				index++;
-			}
-		}
-		
-		check[5] = false; //the king doesn't move from original position.
-		
-		//return if there is a true in the list
-		for (boolean element : check) {
-			if (element) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Determine if any <code>Piece</code> can <i>protect</i> the <code>King</code> from <b>check</b>
-	 * 
-	 * @param piece is the piece protecting.
-	 * @param kingTile is the <code>Tile</code> the <code>King</code> is on.
-	 * @param board is the board.
-	 * @param tiles are the original and new position of <code>Piece</code>. 
-	 * 
-	 * @return	<code>true</code> if a Piece can <i>protect</i> the <code>King</code>. </br>
-	 * 			<code>false</code> if a Piece cannot <i>protect</i> the <code>King</code>.
-	 * 
-	 * @throws	IllegalArgumentException if {@link #setTileCollide(Piece, Tile[][], Tile[])},
-	 * 			{@link #getLegal(Piece, Tile[][], Tile[])}, or {@link #collide(Tile[])} throw their exceptions
-	 */
-	public static boolean protect(Piece piece, Tile kingTile, Tile[][] board, Tile[] tiles) {
-		Piece tempPiece;		//piece in the board
-		King king = (King)kingTile.getPiece();
-		Tile[] path = Piece.setTileCollide(piece, board, new Tile[] {tiles[1], kingTile});
-		
-		for (Tile[] row : board) {	//Find an piece
-			for (Tile tile : row) {
-				tempPiece = tile.getPiece();
-				
-				if (tempPiece != null) {
-					//Determine if the piece is the same color as oponent King
-					if (tempPiece.getPieceColor().equals(king.getPieceColor())) {
-						//path is empty means that attacking piece is next to King
-						if (path.length == 0) {
-							return true;
-						}
-						
-						else {
-						//check all tiles from attacking piece to King to see if any piece can move there
-							for (Tile tileCheck : path) {
-								//determine if an ally can move into this path
-								if (Piece.getLegal(tempPiece, board, new Tile[]{tile, tileCheck})) {
-									//determine if the movement causes colliding
-									if (! Piece.collide(Piece.setTileCollide(tempPiece, board, new Tile[] {tileCheck, kingTile}))) {
-										return true;
-									}
-								}
-							}
-						}
-					}
+					if (!kingTile.getPiece().isAlly(tempKingTilePiece))
+						if (!this.checkKing(b, tiles, tempKingTile)) return true;
+				} catch (ArrayIndexOutOfBoundsException aiooe) {
+					continue;
 				}
 			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Determine if a piece moves to protect the King from check
-	 * 
-	 * @param piece is the piece protecting.
-	 * @param board is the board.
-	 * @param tiles are the original and new positions of <code>piece</code>.
-	 * 
-	 * @return	<code>true</code> if <code>Piece</code> moves to <i>protect</i> the <code>King</code>. </br>
-	 * 			<code>false</code> if <code>Piece</code> does not moves to <i>protect</i> the <code>King</code>.
-	 * 
-	 * @throws	IllegalArgumentException if {@link #setTileCollide(Piece, Tile[][], Tile[])} or
-	 * 			{@link #getLegal(Piece, Tile[][], Tile[])} throw their exceptoins.
-	 */
-	public static boolean protecting(Piece piece, Tile[][] board, Tile[] tiles) {
-		//A non-King piece does the protecting
-		if (! (piece instanceof King)) {
-			Tile[] tilesCollide = Piece.setTileCollide(piece, board, new Tile[]{tiles[1], ChessBoard.findKing(piece, board, false)});
-			boolean[] canProtect = new boolean[tilesCollide.length];
-			int index = 0;
-			for (Tile tile : tilesCollide) {
-				canProtect[index] = Piece.getLegal(piece, board, new Tile[]{tiles[1], tile});
-				index++;
-			}
-			
-			for (boolean isProtect : canProtect) {
-				if (isProtect) {
-					return true;
-				}
-			}
-			return false;
-		}
-		
-		/** 
-		 * The <code>King</code> can always protect itself
-		 * Determination if new location is safe is done elseware
-		 * @see #ChessBoard.kingHasBeenCheck(Piece, Tiles[])
-		 */
-		return true;
+		} return false;
 	}
 
 	/**
-	 * Determine, when <i>any</i> {@link Piece} moves, if the {@link King} becomes <b>check</b>.
+	 * Determine if <i>any</i> move puts the {@link King} in <b>check</b>.
 	 * 
-	 * @param piece is the piece moving
 	 * @param board is the board
-	 * @param tiles are the original and new positions of <code>Piece</code>.
+	 * @param tiles are the original and new positions of {@link Piece}.
+	 * @param kingTile is the {@link Tile} where the {@link King} is.
 	 * 
-	 * @return	<code>true</code> if the <code>King</code> is <b>check</b>. </br>
-	 * 			<code>false</code> if the <code>King</code> is <b>not check</b>.
-	 *
-	 * @throws IllegalArgumentException if {@link King#determineCheck(Piece, Tile[][], Tile[])} throws its exception.
-	 * @throws IllegalStateException if {@link #findKing(Piece, Tile[][], boolean)} throws its exception.
+	 * @return	{@code true} if a move puts the {@code King} in <b>check</b>. <br>
+	 * 			{@code false} if a move does not put the {@code King} in <b>check</b>.
 	 */
-	public static boolean determineKingisCheck(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException, IllegalStateException {
-		//Store the original values of pieces in tiles
-		//if the new position is unsafe, the piece moves back to its original position
-		Piece tile0OrigPiece = tiles[0].getPiece();
+	public boolean checkKing(Tile[][] board, Tile[] tiles, Tile kingTile) {
+		//Determine if a piece can move from its current position to the King
+		if (this.getLegal(board, new Tile[]{tiles[1], kingTile}))
+			return (!Piece.collide(this.setTileCollide(board, new Tile[] {tiles[1], kingTile})));
+		return false;
+	}
+	
+	/**
+	 * Determine, when <i>any</i> {@link Piece} moves, if the {@link King} becomes <b>check</b>.<br>
+	 * This ensures that a piece cannot move <i>away</i> from protecting the {@code King}.<br>
+	 * This also ensures that the {@code King} cannot move itself into <b>check</b>.
+	 * 
+	 * @param board is the {@link ChessBoard}
+	 * @param tiles are the original and new positions of {@code piece}.
+	 * 
+	 * @return	{@code true} if the {@code King} is <b>check</b>. <br>
+	 * 			{@code false} if the {@code King} is <b>not check</b>.
+	 */
+	public boolean determineKingisCheck(ChessBoard board, Tile[] tiles) {
+		//Store the original values of pieces in tiles.
+		//if the new position is unsafe, the piece moves back to its original position.
+		Piece tile0OrigPiece = this;
 		Piece tile1OrigPiece = tiles[1].getPiece();
 		
-		//temporarily advance the Piece
-		tiles[1].setPiece(tiles[0].getPiece());
+		//temporarily advance the Piece.
+		tiles[1].setPiece(this);
 		tiles[0].setPiece(null);
 		
-		//Determine if the King is moving
-		if (piece instanceof King) {
-			if(King.determineCheck(piece, board, tiles[1])) {
+		//Determine if the King is moving.
+		if (this instanceof King) {
+			if(((King)this).determineCheck(this, board.getBoard(), tiles[1])) {
 				tiles[0].setPiece(tile0OrigPiece);
 				tiles[1].setPiece(tile1OrigPiece);
 				return true;
-			}
-			
-			else {
+			} else {
 				tiles[0].setPiece(tile0OrigPiece);
 				tiles[1].setPiece(tile1OrigPiece);
 				return false;
 			}
 		}
-		
-		/**<code>Piece</code> is not <code>King</code>.*/
-		
-		/**<code>Piece</code> might be <code>Pawn</code> getting promoted*/
-		if (tiles[1].getPiece() instanceof Pawn) {
+		//Piece is not King.
+		//Piece might be Pawn getting promoted.
+		if (this instanceof Pawn) {
 			int row = tiles[1].getRow();
 			if (row == 7 || row == 0) {
-				((Pawn)tiles[1].getPiece()).promote(tiles);
-				tile0OrigPiece = tiles[0].getPiece();
-				tile1OrigPiece = tiles[1].getPiece();
-				piece = tile1OrigPiece;
+				((Pawn)this).promote(tiles);
+				tile0OrigPiece = tiles[1].getPiece();
+				tile1OrigPiece = tiles[0].getPiece();
 			}
 		}
 		
-		Tile kingTile = ChessBoard.findKing(piece, board, false);
-		if (King.determineCheck(kingTile.getPiece(), board, kingTile)) {
+		Tile kingTile = board.findKing(this, false);
+		King king = (King)kingTile.getPiece();
+		if (king.determineCheck(king, board.getBoard(), kingTile)) {
 			tiles[0].setPiece(tile0OrigPiece);
 			tiles[1].setPiece(tile1OrigPiece);
 			return true;
-		}
-		
-		else {
+		} else {
 			tiles[0].setPiece(tile0OrigPiece);
 			tiles[1].setPiece(tile1OrigPiece);
 			return false;
 		}
 	}
 	
-	/**
-	 * Determine if <i>any</i> move puts the <code>King</code> in <b>check</b>.
-	 * 
-	 * @param piece is the piece moving
-	 * @param board is the board
-	 * @param tiles are the original and new positions of <code>Piece</code>.
-	 * @param kingTile is the <code>Tile</code> where the <code>King</code> is.
-	 * 
-	 * @return	<code>true</code> if a move puts the <code>King</code> in <b>check</b>. </br>
-	 * 			<code>false</code> if a move does not put the <code>King</code> in <b>check</b>.
-	 * 
-	 * @throws	IllegalArgumentException if {@link #getLegal(Piece, Tile[][], Tile[])},
-	 * 			{@link #collide(Tile[])}, or
-	 * 			{@link #setTileCollide(Piece, Tile[][], Tile[])} throws their exceptions.
-	 */
-	public static boolean checkKing(Piece piece, Tile[][] board, Tile[] tiles, Tile kingTile) throws IllegalArgumentException {
-		//Determine if a piece can move from its current position to the King
-		if (Piece.getLegal(piece, board, new Tile[]{tiles[1], kingTile})) {
-			
-			//Determine if other pieces block its path
-			return (!Piece.collide(Piece.setTileCollide(piece, board, new Tile[] {tiles[1], kingTile})));
-		}
-		
-		return false;
-	}
+	@Override
+	public abstract boolean equals(Object obj);
 	
-	//set tileCollide and return tileCollide
 	/**
-	 * Determine all <code>Tile</code> that <code>Piece</code> takes from
-	 * <code>tiles[0]</code> to <code>tiles[1]</code>.
+	 * Determine if this moving from {@code tiles[0]} to {@code tiles[1]} is a legal move.
 	 * 
-	 * @param piece is a piece.
 	 * @param board is the board.
-	 * @param tiles are the original and new position of the <code>piece</code>.
+	 * @param tiles are the original and new positions of {@code piece}
 	 * 
-	 * @return	an <code>Array</code> of <code>Tile</code> containing
-	 * 			all <code>Tile<code> from <code>tiles[0]</code> to <code>tiles[1]</code>.
-	 * 
-	 * @throws IllegalArgumentException if any subclass.{@link #setTileCollide(Piece, Tile[][], Tile[])} throw their exceptions.
+	 * @return	{@code true} if a move is legal.<br>
+	 * 			{@code false} if move is illegal.<br>
+	 *  
+	 * @throws	IllegalArgumentException if tiles does not have 2 elements.
 	 */
-	public static Tile[] setTileCollide(Piece piece, Tile[][] board, Tile[] tiles) throws IllegalArgumentException{
-		if (piece instanceof Pawn) {
-			return Pawn.setTilesCollide(piece, board, tiles);
-		}
-		
-		else if (piece instanceof Knight) {
-			return Knight.setTilesCollide();
-		}
-		
-		else if (piece instanceof Bishop) {
-			return Bishop.setTilesCollide(piece, board, tiles);
-		}
-		
-		else if (piece instanceof Rook) {
-			return Rook.setTilesCollide(piece, board, tiles);
-		}
-		
-		else if (piece instanceof Queen) {
-			return Queen.setTilesCollide(piece, board, tiles);
-		}
-		
-		return King.setTilesCollide(piece, board, tiles);
-	}
-	
+	public abstract boolean getLegal(Tile[][] board, Tile[] tiles) throws IllegalArgumentException;
+
 	/**
-	 * Determine if a <code>Piece</code> is an <i>ally</i>.
-	 * 
-	 * @param piece is the piece to compare.
-	 * 
-	 * @return	<code>true</code> if <code>piece</code> is an <i>ally</i>.</br>
-	 * 			<code>false</code> if <code>piece</code> is not an <i>ally</i>.
-	 */
-	public boolean isAlly(Piece piece) {
-		return this.getPieceColor().equals(piece.getPieceColor());
-	}
-	
-	/**
-	 * Determine the <code>Color</code> of <code>this</code>.
-	 * 
 	 * @return {@link #pieceColor}.
 	 */
-	public Color getPieceColor() {
+	public PieceColor getPieceColor() {
 		return this.pieceColor;
 	}
+	
+	/**
+	 * Get the value of this.
+	 * 
+	 * @return The value of this.
+	 * 
+	 * @throws IllegalAccessException if this is a {@link King}. 
+	 */
+	public abstract int getValue() throws IllegalAccessException;
+	
+	@Override
+	public abstract int hashCode();
+	
+	/**
+	 * Determine if a {@link Piece} is an <i>ally</i>.
+	 * 
+	 * @param piece is the {@code Piece} to compare.
+	 * 
+	 * @return	{@code true} if {@code Piece} is an <i>ally</i>.<br>
+	 * 			{@code false} if {@code Piece} is not an <i>ally</i> or is null.
+	 */
+	public boolean isAlly(Piece piece) {
+		if (piece == null) return false;
+		return this.pieceColor == piece.getPieceColor();
+	}
+	
+	/**
+	 * Determine if this is {@link PieceColor#Black}
+	 * 
+	 * @return {@code true} if {@link PieceColor#Black}.<br>{@code false} otherwise.
+	 */
+	public boolean isBlack() {
+		return PieceColor.Black == this.pieceColor;
+	}
+	
+	/**
+	 * Determine if this is {@link PieceColor#White}
+	 * 
+	 * @return {@code true} if {@link PieceColor#White}.<br>{@code false} otherwise.
+	 */
+	public boolean isWhite() {
+		return PieceColor.White == this.pieceColor;
+	}
+	
+	/**
+	 * Determine if any {@code Piece} can <i>protect</i> the {@link King} from <b>check</b>
+	 * 
+	 * @param kingTile is the {@link Tile} the {@code King} is on.
+	 * @param board is the board.
+	 * @param tiles are the original and new position of {@code piece}. 
+	 * 
+	 * @return	{@code true} if a {@code piece} can <i>protect</i> the {@code King}. <br>
+	 * 			{@code false} if a {@code piece} cannot <i>protect</i> the {@code King}.
+	 */
+	public boolean protect(Tile kingTile, Tile[][] board, Tile[] tiles) {
+		Piece tempPiece;		//piece in the board
+		King king = (King)kingTile.getPiece();
+		Tile[] path = this.setTileCollide(board, new Tile[] {tiles[1], kingTile});
+		
+		//path is empty means that attacking piece is next to King
+		if (path.length == 0) return true;
+		
+		for (Tile[] row : board) {	//Find a piece
+			for (Tile tile : row) {
+				tempPiece = tile.getPiece();
+				if (tempPiece == null)			continue;
+				if (tempPiece instanceof King)	continue;
+				if (!tempPiece.isAlly(king))	continue;
+				for (Tile tileCheck : path) {
+					//determine if an ally can move into this path
+					if (!tempPiece.getLegal(board, new Tile[] {tile, tileCheck})) continue;
+					if (!Piece.collide(tempPiece.setTileCollide(board, new Tile[] {tileCheck, kingTile}))) return true;
+				}
+			}
+		} return false;
+	}
+	
+	/**
+	 * Determine if {@code piece} moves to <i>protect</i> the {@link King} from <b>check</b>.
+	 * 
+	 * @param board is the board.
+	 * @param tiles are the original and new positions of {@code piece}.
+	 * 
+	 * @return	{@code true} if {@code Piece} moves to <i>protect</i> the {@code King}.<br>
+	 * 			{@code false} if {@code Piece} does not moves to <i>protect</i> the {@code King}.
+	 */
+	public boolean protecting(ChessBoard board, Tile[] tiles) {
+		Tile[][] b = board.getBoard();
+		//A non-King piece does the protecting
+		if (!(this instanceof King)) {
+			Tile[] tilesCollide = this.setTileCollide(b, new Tile[]{tiles[1], board.findKing(this, false)});
+			for (Tile tile : tilesCollide) {
+				if (this.getLegal(b, new Tile[]{tiles[1], tile})) return true;
+			} return false;
+		}
+		
+		/** 
+		 * The {@code King} can always protect itself
+		 * Determination if new location is safe is done elseware
+		 * @see ChessBoard#kingHasBeenCheck(Piece, Tiles[])
+		 */
+		return true;
+	}
+	
+	/**
+	 * Makes all attributes, if any, to their default values.
+	 */
+	public abstract void reset();
+	
+	/**
+	 * Determine all {@link Tile} from {@code tiles[0]} to {@code tiles[1]} that this travels over in its journey.
+	 * 
+	 * @param board is the board.
+	 * @param tiles are the original and new position of the this.
+	 * 
+	 * @return	an Array of {@code Tile} that this will take along its journey.
+	 * 
+	 * @throws	IllegalArgumentException if {@code tiles} does not have 2 elements.
+	 */
+	public abstract Tile[] setTileCollide(Tile[][] board, Tile[] tiles) throws IllegalArgumentException;
+
+	@Override
+	public abstract String toString();
 }
